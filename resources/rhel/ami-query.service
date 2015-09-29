@@ -1,0 +1,11 @@
+[Unit]
+Description=amiquery RESTful service
+After=network.target
+
+[Service]
+User=ami-query
+EnvironmentFile=-/etc/sysconfig/ami-query
+ExecStart=/usr/bin/ami-query
+
+[Install]
+WantedBy=multi-user.target

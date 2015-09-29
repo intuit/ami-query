@@ -1,0 +1,92 @@
+#
+# User account that runs the ami-query daemon.
+#
+# NOTE: changing this setting will also require updating the permissions of
+# AMIQUERY_APP_LOGFILE and AMIQUERY_HTTP_LOGFILE.
+#
+AMIQUERY_USER=ami-query
+
+#
+# The AWS account owner IDs used to filter AMI results. The value must be a
+# comma-separate list of IDs (e.g. "111122223333,444455556666").
+#
+# NOTE: This value must be defined for ami-query to start.
+#
+AMIQUERY_OWNER_IDS=
+
+#
+# AWS API access key
+#
+# NOTE: This value must be defined either through this environment variable,
+# the ~/.aws/credentials file, or an IAM role pulled from EC2 meta-data.
+#
+#AWS_ACCESS_KEY_ID=
+
+#
+# AWS API secret key
+#
+# NOTE: This value must be defined either through this environment variable,
+# the ~/.aws/credentials file, or an IAM role pulled from EC2 meta-data.
+#
+#AWS_SECRET_ACCESS_KEY=
+
+#
+# The AWS regions to query for AMIs. The value must be a comma-separated list of
+# regions (e.g. "us-east-1,us-west-1"). If undefined, all regions will be used.
+#
+#AMIQUERY_REGIONS=
+
+#
+# The AWS role ARN to use for AssumeRole. This is used when running ami-query
+# from an account other than the account that owns the AMIs.
+#
+#AMIQUERY_ROLE_ARN=
+
+#
+# The address and port ami-query will bind to. If undefined, the default value
+# is localhost:8080
+#
+#AMIQUERY_LISTEN_ADDRESS=localhost:8080
+
+#
+# The type of cache manager to use. If undefined, the default value is
+# "internal".
+#
+#AMIQUERY_CACHE_MANAGER=internal
+
+#
+# The time out between cache updates. If undefined, the default value is 15
+# minutes.
+#
+#AMIQUERY_CACHE_TTL=15m
+
+#
+# The memcached servers to use when AMIQUERY_CACHE_MANAGER is set to
+# "memcached". This value must be a comma-separated list of servers
+# (e.g. "localhost:11211,localhost:11212").
+#
+#AMIQUERY_MEMCACHED_SERVERS=
+
+#
+# Application log file location. If undefined, ami-query logs to STDERR.
+#
+# NOTE: Log rotation is not handled by ami-query. Consider using logrotate to
+# manage the ami-query log file.
+#
+#AMIQUERY_APP_LOGFILE=/var/log/ami-query.log
+
+#
+# HTTP log file location. If undefined, ami-query logs to STDERR.
+#
+# NOTE: Log rotation is not handled by ami-query. Consider using logrotate to
+# manage the ami-query HTTP log file.
+#
+#AMIQUERY_HTTP_LOGFILE=/var/log/ami-query_http.log
+
+#
+# The following settings only apply when communicating to AWS through a proxy
+# server.
+#
+#http_proxy=
+#https_proxy=
+#no_proxy=

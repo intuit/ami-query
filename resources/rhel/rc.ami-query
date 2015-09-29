@@ -1,0 +1,96 @@
+#!/bin/bash
+#
+# ami-query    Start up the AMI query RESTful API service.
+#
+# chkconfig: 3 98 98
+# description: Provide a RESTful API to query information about Amazon AWS AMIs.
+#
+# processname: ami-query
+# pidfile: /var/run/ami-query.pid
+
+### BEGIN INIT INFO
+# Provides: ami-query
+# Required-Start: $local_fs $network $syslog
+# Required-Stop: $local_fs $syslog
+# Should-Start: $syslog
+# Should-Stop: $network $syslog
+# Default-Start: 3 5
+# Default-Stop: 0 1 6
+# Short-Description: Start up the AMI query RESTful API service.
+# Description:       ami-query is a REST service that can be quiered for listing
+#                    AMIs owned by the provided AWS owner ID.
+### END INIT INFO
+
+RETVAL=0
+prog="ami-query"
+cmd=/usr/bin/$prog
+lockfile=/var/lock/subsys/$prog
+pidfile=/var/run/$prog.pid
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+# source amiquery configuration
+[ -f /etc/sysconfig/ami-query ] && . /etc/sysconfig/ami-query
+
+RUN_AS=""
+
+[ -n "$AMIQUERY_USER" ] && RUN_AS="--user=$AMIQUERY_USER"
+[ -n "${AMIQUERY_OWNER_IDS}" ] && export AMIQUERY_OWNER_IDS="$AMIQUERY_OWNER_IDS"
+[ -n "${AMIQUERY_REGIONS}" ] && export AMIQUERY_REGIONS="$AMIQUERY_REGIONS"
+[ -n "${AMIQUERY_APP_LOGFILE}" ] && export AMIQUERY_APP_LOGFILE="$AMIQUERY_APP_LOGFILE"
+[ -n "${AMIQUERY_HTTP_LOGFILE}" ] && export AMIQUERY_HTTP_LOGFILE="$AMIQUERY_HTTP_LOGFILE"
+[ -n "${AMIQUERY_LISTEN_ADDRESS}" ] && export AMIQUERY_LISTEN_ADDRESS="$AMIQUERY_LISTEN_ADDRESS"
+[ -n "${AMIQUERY_CACHE_MANAGER}" ] && export AMIQUERY_CACHE_MANAGER="$AMIQUERY_CACHE_MANAGER"
+[ -n "${AMIQUERY_CACHE_TTL}" ] && export AMIQUERY_CACHE_TTL="$AMIQUERY_CACHE_TTL"
+[ -n "${AMIQUERY_MEMCACHED_SERVERS}" ] && export AMIQUERY_MEMCACHED_SERVERS="$AMIQUERY_MEMCACHED_SERVERS"
+[ -n "${AWS_ACCESS_KEY_ID}" ] && export AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"
+[ -n "${AWS_SECRET_ACCESS_KEY}" ] && export AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
+[ -n "${http_proxy}" ] && export http_proxy="$http_proxy"
+[ -n "${https_proxy}" ] && export https_proxy="$https_proxy"
+[ -n "${no_proxy}" ] && export no_proxy="$no_proxy"
+
+start()
+{
+    [ -x $cmd ] || exit 5
+
+    echo -n $"Starting $prog: "
+    daemon $RUN_AS $cmd -daemonize 2>/dev/null
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    echo
+}
+
+stop()
+{
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    echo
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $prog
+        ;;
+    restart|reload)
+        stop
+        start
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|restart|reload|status}"
+        RETVAL=1
+esac
+exit $RETVAL
