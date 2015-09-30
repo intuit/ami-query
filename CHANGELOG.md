@@ -1,3 +1,3 @@
-## 1.0.0 (unreleased)
+## 1.0.0 (September 29, 2015)
 
 * Initial Release
