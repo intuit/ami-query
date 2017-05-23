@@ -1,5 +1,5 @@
 NAME       = ami-query
-VERSION    = 1.0.0
+VERSION    = 1.1.0
 RPM_TOPDIR = "$(shell pwd)/rpmbuild"
 
 RPMBUILD_ARGS := \

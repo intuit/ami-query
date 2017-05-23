@@ -4,21 +4,15 @@ Provide a RESTful API to query information about Amazon AWS AMIs.
 
 ## Prerequisites
 
-`ami-query` is written in Go. You need to have version 1.5.1 or higher
-installed. For Go installation instructions see https://golang.org/doc/install.
-
-Third party packages are
-[vendored](https://code.google.com/p/go-wiki/wiki/PackageManagementTools) using
-the Go 1.5 [vendor experiment](https://golang.org/s/go15vendor).
+`ami-query` is written in Go. You need to have version 1.8 or higher installed.
+For Go installation instructions see https://golang.org/doc/install.
 
 ## Installation
 
-To install `ami-query` export `GOPATH` and `GO15VENDOREXPERIMENT` then use
-`go get`.
+To install `ami-query` export `GOPATH` then use `go get`.
 
 ```shell
 $ export GOPATH=$HOME/go
-$ export GO15VENDOREXPERIMENT=1
 $ go get github.com/intuit/ami-query
 ```
 
@@ -104,6 +98,16 @@ The configuration is handled through the following environment variables.
 
   The file location to send HTTP log messages. Note that `ami-query` does not
   manage this file, it only writes to it. The default is to log to STDERR.
+
+* **SSL_CERTIFICATE_FILE**
+
+  The file location of the SSL certificate file. **SSL_KEY_FILE** also needs to
+  be specified in order to enable HTTPS support.
+
+* **SSL_KEY_FILE**
+
+  The file location of the SSL key file. **SSL_CERTIFICATE_FILE** also needs to
+  be specified in order to enable HTTPS support.
 
 #### Example Configuration
 

@@ -21,6 +21,8 @@ type Config struct {
 	Manager    amicache.CacheManager
 	CacheTTL   time.Duration
 	RoleARN    string
+	SSLCert    string
+	SSLKey     string
 }
 
 // NewConfig returns a Config with settings pulled from the environment. See
@@ -72,6 +74,14 @@ func NewConfig() (*Config, error) {
 		cfg.Manager = amicache.NewMemcachedManager(servers...)
 	default:
 		cfg.Manager = amicache.NewInternalManager()
+	}
+
+	// SSL cert and key used for HTTPS
+	if sslCert := os.Getenv("SSL_CERTIFICATE_FILE"); sslCert != "" {
+		cfg.SSLCert = sslCert
+	}
+	if sslkey := os.Getenv("SSL_KEY_FILE"); sslkey != "" {
+		cfg.SSLKey = sslkey
 	}
 
 	return cfg, nil
