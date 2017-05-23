@@ -35,7 +35,7 @@ pidfile=/var/run/$prog.pid
 
 RUN_AS=""
 
-[ -n "$AMIQUERY_USER" ] && RUN_AS="--user=$AMIQUERY_USER"
+[ -n "${AMIQUERY_USER}" ] && RUN_AS="--user=$AMIQUERY_USER"
 [ -n "${AMIQUERY_OWNER_IDS}" ] && export AMIQUERY_OWNER_IDS="$AMIQUERY_OWNER_IDS"
 [ -n "${AMIQUERY_REGIONS}" ] && export AMIQUERY_REGIONS="$AMIQUERY_REGIONS"
 [ -n "${AMIQUERY_APP_LOGFILE}" ] && export AMIQUERY_APP_LOGFILE="$AMIQUERY_APP_LOGFILE"
@@ -46,6 +46,8 @@ RUN_AS=""
 [ -n "${AMIQUERY_MEMCACHED_SERVERS}" ] && export AMIQUERY_MEMCACHED_SERVERS="$AMIQUERY_MEMCACHED_SERVERS"
 [ -n "${AWS_ACCESS_KEY_ID}" ] && export AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"
 [ -n "${AWS_SECRET_ACCESS_KEY}" ] && export AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
+[ -n "${SSL_CERTIFICATE_FILE}" ] && export SSL_CERTIFICATE_FILE="$SSL_CERTIFICATE_FILE"
+[ -n "${SSL_KEY_FILE}" ] && export SSL_KEY_FILE="$SSL_KEY_FILE"
 [ -n "${http_proxy}" ] && export http_proxy="$http_proxy"
 [ -n "${https_proxy}" ] && export https_proxy="$https_proxy"
 [ -n "${no_proxy}" ] && export no_proxy="$no_proxy"

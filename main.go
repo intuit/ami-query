@@ -5,24 +5,26 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/VividCortex/godaemon"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"golang.org/x/net/context"
 
 	"github.com/intuit/ami-query/amicache"
 	"github.com/intuit/ami-query/api"
 	"github.com/intuit/ami-query/api/v1"
 )
 
-const version = "1.0.0"
+const version = "1.1.0"
 const usage = `usage: %s [--version] [--help]
 
   --help     Display this help message and exit
@@ -74,7 +76,16 @@ func main() {
 		amicache.AssumeRole(cfg.RoleARN),
 		amicache.HTTPClient(&http.Client{
 			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
+				Proxy:                 http.ProxyFromEnvironment,
+				MaxIdleConns:          100,
+				IdleConnTimeout:       90 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+				MaxIdleConnsPerHost:   1,
+				DisableKeepAlives:     false,
+				Dial: (&net.Dialer{
+					Timeout:   30 * time.Second,
+					KeepAlive: 30 * time.Second,
+				}).Dial,
 			},
 		}),
 	)
@@ -110,7 +121,12 @@ func main() {
 
 	http.Handle("/", router)
 
-	if err := http.ListenAndServe(cfg.ListenAddr, nil); err != nil {
+	if cfg.SSLCert != "" && cfg.SSLKey != "" {
+		err = http.ListenAndServeTLS(cfg.ListenAddr, cfg.SSLCert, cfg.SSLKey, nil)
+	} else {
+		err = http.ListenAndServe(cfg.ListenAddr, nil)
+	}
+	if err != nil {
 		log.Fatal(err)
 	}
 }
