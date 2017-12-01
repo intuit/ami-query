@@ -7,82 +7,82 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
-
-	"github.com/intuit/ami-query/amicache"
 )
 
-// Config is a config
+// Config is the configuration for ami-query.
 type Config struct {
-	ListenAddr string
-	Regions    []string
-	OwnerIDs   []string
-	Manager    amicache.CacheManager
-	CacheTTL   time.Duration
-	RoleARN    string
-	SSLCert    string
-	SSLKey     string
+	ListenAddr                 string
+	SSLCert                    string
+	SSLKey                     string
+	RoleName                   string
+	Regions                    []string
+	OwnerIDs                   []string
+	CacheTTL                   time.Duration
+	CacheMaxConcurrentRequests int
+	CacheMaxRequestRetries     int
+	AppLog                     string
+	HTTPLog                    string
 }
 
 // NewConfig returns a Config with settings pulled from the environment. See
 // the README.md for more information.
 func NewConfig() (*Config, error) {
 	var err error
-	var cfg = &Config{
+	var cfg = Config{
 		ListenAddr: ":8080",
 		CacheTTL:   15 * time.Minute,
+		RoleName:   os.Getenv("AMIQUERY_ROLE_NAME"),
+		AppLog:     os.Getenv("AMIQUERY_APP_LOGFILE"),
+		HTTPLog:    os.Getenv("AMIQUERY_HTTP_LOGFILE"),
+		SSLCert:    os.Getenv("SSL_CERTIFICATE_FILE"),
+		SSLKey:     os.Getenv("SSL_KEY_FILE"),
 	}
 
-	// Set the listen address
-	if laddr := os.Getenv("AMIQUERY_LISTEN_ADDRESS"); laddr != "" {
-		cfg.ListenAddr = laddr
+	// The role assumed into in targeted accounts.
+	if cfg.RoleName == "" {
+		return nil, fmt.Errorf("AMIQUERY_ROLE_NAME is undefined")
 	}
 
-	// AWS regions to scan for AMIs
-	if regions := os.Getenv("AMIQUERY_REGIONS"); regions != "" {
-		cfg.Regions = strings.Split(regions, ",")
-	}
-
-	// Duration between cache updates
-	if ttl := os.Getenv("AMIQUERY_CACHE_TTL"); ttl != "" {
-		if cfg.CacheTTL, err = time.ParseDuration(ttl); err != nil {
-			return nil, err
-		}
-	}
-
-	// Owner IDs used to filter AMI results
+	// Owner IDs used to filter AMI results.
 	if ownerIDs := os.Getenv("AMIQUERY_OWNER_IDS"); ownerIDs != "" {
 		cfg.OwnerIDs = strings.Split(ownerIDs, ",")
 	} else {
 		return nil, fmt.Errorf("AMIQUERY_OWNER_IDS is undefined")
 	}
 
-	// ARN used for AssumeRole
-	if arn := os.Getenv("AMIQUERY_ROLE_ARN"); arn != "" {
-		cfg.RoleARN = arn
+	// The address to listen on.
+	if laddr := os.Getenv("AMIQUERY_LISTEN_ADDRESS"); laddr != "" {
+		cfg.ListenAddr = laddr
 	}
 
-	// The type of underlying cache to use
-	cacheType := os.Getenv("AMIQUERY_CACHE_MANAGER")
-	switch cacheType {
-	case "memcached":
-		servers := strings.Split(os.Getenv("AMIQUERY_MEMCACHED_SERVERS"), ",")
-		if len(servers) == 0 {
-			return nil, fmt.Errorf("AMIQUERY_MEMCACHED_SERVERS is undefined")
+	// AWS regions to scan for AMIs.
+	if regions := os.Getenv("AMIQUERY_REGIONS"); regions != "" {
+		cfg.Regions = strings.Split(regions, ",")
+	}
+
+	// Duration between cache updates.
+	if ttl := os.Getenv("AMIQUERY_CACHE_TTL"); ttl != "" {
+		if cfg.CacheTTL, err = time.ParseDuration(ttl); err != nil {
+			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_TTL: %v", err)
 		}
-		cfg.Manager = amicache.NewMemcachedManager(servers...)
-	default:
-		cfg.Manager = amicache.NewInternalManager()
 	}
 
-	// SSL cert and key used for HTTPS
-	if sslCert := os.Getenv("SSL_CERTIFICATE_FILE"); sslCert != "" {
-		cfg.SSLCert = sslCert
-	}
-	if sslkey := os.Getenv("SSL_KEY_FILE"); sslkey != "" {
-		cfg.SSLKey = sslkey
+	// Maximum number of goroutines used for updating the cache.
+	if maxRequests := os.Getenv("AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS"); maxRequests != "" {
+		if cfg.CacheMaxConcurrentRequests, err = strconv.Atoi(maxRequests); err != nil {
+			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS: %v", err)
+		}
 	}
 
-	return cfg, nil
+	// Maximum number of API request retries before giving up.
+	if maxRetries := os.Getenv("AMIQUERY_CACHE_MAX_REQUEST_RETRIES"); maxRetries != "" {
+		if cfg.CacheMaxRequestRetries, err = strconv.Atoi(maxRetries); err != nil {
+			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_MAX_REQUEST_RETRIES: %v", err)
+		}
+	}
+
+	return &cfg, nil
 }

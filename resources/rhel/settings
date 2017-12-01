@@ -15,6 +15,15 @@ AMIQUERY_USER=ami-query
 AMIQUERY_OWNER_IDS=
 
 #
+# The name of the role ued for AssumeRole. This role must exist in every account
+# provided by AMIQUERY_OWNER_IDS and the role must allow access from the account
+# ami-query is running in.
+#
+# NOTE: This value must be defined for ami-query to start.
+#
+#AMIQUERY_ROLE_NAME=
+
+#
 # AWS API access key
 #
 # NOTE: This value must be defined either through this environment variable,
@@ -31,16 +40,11 @@ AMIQUERY_OWNER_IDS=
 #AWS_SECRET_ACCESS_KEY=
 
 #
-# The AWS regions to query for AMIs. The value must be a comma-separated list of
-# regions (e.g. "us-east-1,us-west-1"). If undefined, all regions will be used.
+# The regions to query for AMIs. The value must be a comma-separated list of
+# regions (e.g. "us-east-1,us-west-1"). If undefined, all AWS Standard Regions
+# will be used.
 #
 #AMIQUERY_REGIONS=
-
-#
-# The AWS role ARN to use for AssumeRole. This is used when running ami-query
-# from an account other than the account that owns the AMIs.
-#
-#AMIQUERY_ROLE_ARN=
 
 #
 # The address and port ami-query will bind to. If undefined, the default value
@@ -49,23 +53,20 @@ AMIQUERY_OWNER_IDS=
 #AMIQUERY_LISTEN_ADDRESS=localhost:8080
 
 #
-# The type of cache manager to use. If undefined, the default value is
-# "internal".
-#
-#AMIQUERY_CACHE_MANAGER=internal
-
-#
 # The time out between cache updates. If undefined, the default value is 15
 # minutes.
 #
 #AMIQUERY_CACHE_TTL=15m
 
 #
-# The memcached servers to use when AMIQUERY_CACHE_MANAGER is set to
-# "memcached". This value must be a comma-separated list of servers
-# (e.g. "localhost:11211,localhost:11212").
+# The following two settings control the number of concurrent
+# DescribeImageAttributes API requests and allowed retries. These are used to
+# control RequestLimitExceed errors.
+# See the following for more information:
+# http://docs.aws.amazon.com/AWSEC2/latest/APIReference/query-api-troubleshooting.html#api-request-rate
 #
-#AMIQUERY_MEMCACHED_SERVERS=
+#AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS=15
+#AMIQUERY_CACHE_MAX_REQUEST_RETRIES=5
 
 #
 # Application log file location. If undefined, ami-query logs to STDERR.
