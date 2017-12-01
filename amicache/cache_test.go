@@ -272,3 +272,25 @@ func TestFilteredImages(t *testing.T) {
 		t.Errorf("\n\twant err: %q\n\t got err: %q", want, got)
 	}
 }
+
+func TestPoolSize(t *testing.T) {
+	tests := []struct {
+		name    string
+		max     int
+		queue   int
+		percent float64
+		want    int
+	}{
+		{"min_workers", 10, 1, 0.05, 1},
+		{"2_workers", 10, 42, 0.05, 2},
+		{"5_workers", 10, 108, 0.05, 5},
+		{"max_workers", 2, 1000, 0.05, 2},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := poolSize(tt.max, tt.queue, tt.percent); tt.want != got {
+				t.Errorf("want: %d, got: %d", tt.want, got)
+			}
+		})
+	}
+}
