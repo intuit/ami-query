@@ -6,6 +6,7 @@ package amicache
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"reflect"
 	"testing"
@@ -290,6 +291,31 @@ func TestPoolSize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := poolSize(tt.max, tt.queue, tt.percent); tt.want != got {
 				t.Errorf("want: %d, got: %d", tt.want, got)
+			}
+		})
+	}
+}
+
+type mockAWSErr struct{}
+
+func (mockAWSErr) Error() string   { return "foo" }
+func (mockAWSErr) Code() string    { return "42" }
+func (mockAWSErr) Message() string { return "foobar" }
+func (mockAWSErr) OrigErr() error  { return errors.New("o.g. foo") }
+
+func TestAWSError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want string
+	}{
+		{"awsError", &mockAWSErr{}, "foobar"},
+		{"error", errors.New("foobar"), "foobar"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := awsError(tt.err).Error(); tt.want != got {
+				t.Errorf("want: %v, got: %v", tt.want, got)
 			}
 		})
 	}
