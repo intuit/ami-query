@@ -52,11 +52,12 @@ lint: check-go check-golint
 
 .PHONY: rpm
 rpm: all
-	@$(MAKE) -C assets
+	@$(MAKE) -C resources
 
 .PHONY: clean
 clean:
 	@rm -rf ./bin *.rpm
+	@$(MAKE) -C resources clean
 
 .PHONY: check-go
 check-go:
