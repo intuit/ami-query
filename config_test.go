@@ -5,77 +5,151 @@
 package main
 
 import (
+	"errors"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 )
 
 func TestConfig(t *testing.T) {
-	env := map[string]string{
-		"AMIQUERY_ROLE_NAME":                     "foo",
-		"AMIQUERY_OWNER_IDS":                     "1111,2222",
-		"AMIQUERY_LISTEN_ADDRESS":                ":8081",
-		"AMIQUERY_REGIONS":                       "us-west-1,us-west-2",
-		"AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS": "1",
-		"AMIQUERY_CACHE_MAX_REQUEST_RETRIES":     "1",
-		"AMIQUERY_APP_LOGFILE":                   "/tmp/app.log",
-		"AMIQUERY_HTTP_LOGFILE":                  "/tmp/http.log",
-		"SSL_CERTIFICATE_FILE":                   "/tmp/test.crt",
-		"SSL_KEY_FILE":                           "/tmp/test.key",
-	}
+	tests := []struct {
+		name string
+		vars map[string]string
+		want *Config
+		err  error
+	}{
+		{
 
-	for k, v := range env {
-		if err := os.Setenv(k, v); err != nil {
-			t.Fatal(err)
+			name: "default_settings",
+			vars: map[string]string{
+				"AMIQUERY_ROLE_NAME": "foo",
+				"AMIQUERY_OWNER_IDS": "123456789012,123456789013",
+			},
+			want: &Config{
+				ListenAddr: ":8080",
+				RoleName:   "foo",
+				OwnerIDs:   []string{"123456789012", "123456789013"},
+				CacheTTL:   15 * time.Minute,
+			},
+			err: nil,
+		},
+		{
+
+			name: "all_settings",
+			vars: map[string]string{
+				"AMIQUERY_LISTEN_ADDRESS":                ":8081",
+				"AMIQUERY_ROLE_NAME":                     "foo",
+				"AMIQUERY_OWNER_IDS":                     "123456789012,123456789013",
+				"AMIQUERY_REGIONS":                       "us-west-1,us-west-2",
+				"AMIQUERY_CACHE_TTL":                     "20m",
+				"AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS": "1",
+				"AMIQUERY_CACHE_MAX_REQUEST_RETRIES":     "1",
+				"AMIQUERY_APP_LOGFILE":                   "/tmp/app.log",
+				"AMIQUERY_HTTP_LOGFILE":                  "/tmp/http.log",
+				"SSL_CERTIFICATE_FILE":                   "/tmp/test.crt",
+				"SSL_KEY_FILE":                           "/tmp/test.key",
+			},
+			want: &Config{
+				ListenAddr:                 ":8081",
+				RoleName:                   "foo",
+				Regions:                    []string{"us-west-1", "us-west-2"},
+				OwnerIDs:                   []string{"123456789012", "123456789013"},
+				CacheTTL:                   20 * time.Minute,
+				CacheMaxConcurrentRequests: 1,
+				CacheMaxRequestRetries:     1,
+				AppLog:                     "/tmp/app.log",
+				HTTPLog:                    "/tmp/http.log",
+				SSLCert:                    "/tmp/test.crt",
+				SSLKey:                     "/tmp/test.key",
+			},
+			err: nil,
+		},
+		{
+			name: "missing_role",
+			vars: map[string]string{},
+			want: nil,
+			err:  errors.New("AMIQUERY_ROLE_NAME is undefined"),
+		},
+		{
+			name: "missing_owner_ids",
+			vars: map[string]string{
+				"AMIQUERY_ROLE_NAME": "foo",
+			},
+			want: nil,
+			err:  errors.New("AMIQUERY_OWNER_IDS is undefined"),
+		},
+		{
+			name: "bad_cache_ttl_value",
+			vars: map[string]string{
+				"AMIQUERY_ROLE_NAME": "foo",
+				"AMIQUERY_OWNER_IDS": "123456789012,123456789013",
+				"AMIQUERY_CACHE_TTL": "foo",
+			},
+			want: nil,
+			err:  errors.New("failed to read AMIQUERY_CACHE_TTL: time: invalid duration foo"),
+		},
+		{
+			name: "bad_cache_max_requests_value",
+			vars: map[string]string{
+				"AMIQUERY_ROLE_NAME":                     "foo",
+				"AMIQUERY_OWNER_IDS":                     "123456789012,123456789013",
+				"AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS": "1foo",
+			},
+			want: nil,
+			err:  errors.New(`failed to read AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS: strconv.Atoi: parsing "1foo": invalid syntax`),
+		},
+		{
+			name: "bad_cache_max_retries_value",
+			vars: map[string]string{
+				"AMIQUERY_ROLE_NAME":                 "foo",
+				"AMIQUERY_OWNER_IDS":                 "123456789012,123456789013",
+				"AMIQUERY_CACHE_MAX_REQUEST_RETRIES": "1foo",
+			},
+			want: nil,
+			err:  errors.New(`failed to read AMIQUERY_CACHE_MAX_REQUEST_RETRIES: strconv.Atoi: parsing "1foo": invalid syntax`),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := clearVars(); err != nil {
+				t.Fatal(err)
+			}
+			for k, v := range tt.vars {
+				if err := os.Setenv(k, v); err != nil {
+					t.Fatal(err)
+				}
+			}
+			got, err := NewConfig()
+			if err != nil && err.Error() != tt.err.Error() {
+				t.Errorf("want: %v, got: %v", tt.err, err)
+				return
+			}
+			if !reflect.DeepEqual(tt.want, got) {
+				t.Errorf("\n\twant: %+v\n\t got: %+v", tt.want, got)
+			}
+		})
+	}
+}
+
+func clearVars() error {
+	vars := []string{
+		"AMIQUERY_LISTEN_ADDRESS",
+		"AMIQUERY_ROLE_NAME",
+		"AMIQUERY_OWNER_IDS",
+		"AMIQUERY_REGIONS",
+		"AMIQUERY_CACHE_TTL",
+		"AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS",
+		"AMIQUERY_CACHE_MAX_REQUEST_RETRIES",
+		"AMIQUERY_APP_LOGFILE",
+		"AMIQUERY_HTTP_LOGFILE",
+		"SSL_CERTIFICATE_FILE",
+		"SSL_KEY_FILE",
+	}
+	for _, v := range vars {
+		if err := os.Unsetenv(v); err != nil {
+			return err
 		}
 	}
-
-	c, err := NewConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if want, got := "foo", c.RoleName; want != got {
-		t.Errorf("AMIQUERY_ROLE_NAME - want: %s, got: %s", want, got)
-	}
-
-	if want, got := 2, len(c.OwnerIDs); want != got {
-		t.Errorf("AMIQUERY_OWNER_IDS - want: %d owner(s), got: %d owner(s)", want, got)
-	}
-
-	if want, got := ":8081", c.ListenAddr; want != got {
-		t.Errorf("AMIQUERY_LISTEN_ADDRESS - want: %s, got: %s", want, got)
-	}
-
-	if want, got := 2, len(c.Regions); want != got {
-		t.Errorf("AMIQUERY_REGIONS - want: %d owner(s), got: %d owner(s)", want, got)
-	}
-
-	if want, got := 15*time.Minute, c.CacheTTL; want != got {
-		t.Errorf("AMIQUERY_CACHE_TTL - want: %s, got: %s", want, got)
-	}
-
-	if want, got := 1, c.CacheMaxConcurrentRequests; want != got {
-		t.Errorf("AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS - want: %d, got: %d", want, got)
-	}
-
-	if want, got := 1, c.CacheMaxRequestRetries; want != got {
-		t.Errorf("AMIQUERY_CACHE_MAX_REQUEST_RETRIES - want: %d, got: %d", want, got)
-	}
-
-	if want, got := "/tmp/app.log", c.AppLog; want != got {
-		t.Errorf("AMIQUERY_APP_LOGFILE - want: %s, got: %s", want, got)
-	}
-
-	if want, got := "/tmp/http.log", c.HTTPLog; want != got {
-		t.Errorf("AMIQUERY_HTTP_LOGFILE - want: %s, got: %s", want, got)
-	}
-
-	if want, got := "/tmp/test.crt", c.SSLCert; want != got {
-		t.Errorf("SSL_CERTIFICATE_FILE - want: %s, got: %s", want, got)
-	}
-
-	if want, got := "/tmp/test.key", c.SSLKey; want != got {
-		t.Errorf("SSL_KEY_FILE - want: %s, got: %s", want, got)
-	}
+	return nil
 }

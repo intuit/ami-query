@@ -15,16 +15,16 @@ import (
 // Config is the configuration for ami-query.
 type Config struct {
 	ListenAddr                 string
-	SSLCert                    string
-	SSLKey                     string
 	RoleName                   string
-	Regions                    []string
 	OwnerIDs                   []string
+	Regions                    []string
 	CacheTTL                   time.Duration
 	CacheMaxConcurrentRequests int
 	CacheMaxRequestRetries     int
 	AppLog                     string
 	HTTPLog                    string
+	SSLCert                    string
+	SSLKey                     string
 }
 
 // NewConfig returns a Config with settings pulled from the environment. See
@@ -41,6 +41,11 @@ func NewConfig() (*Config, error) {
 		SSLKey:     os.Getenv("SSL_KEY_FILE"),
 	}
 
+	// The address to listen on.
+	if laddr := os.Getenv("AMIQUERY_LISTEN_ADDRESS"); laddr != "" {
+		cfg.ListenAddr = laddr
+	}
+
 	// The role assumed into in targeted accounts.
 	if cfg.RoleName == "" {
 		return nil, fmt.Errorf("AMIQUERY_ROLE_NAME is undefined")
@@ -51,11 +56,6 @@ func NewConfig() (*Config, error) {
 		cfg.OwnerIDs = strings.Split(ownerIDs, ",")
 	} else {
 		return nil, fmt.Errorf("AMIQUERY_OWNER_IDS is undefined")
-	}
-
-	// The address to listen on.
-	if laddr := os.Getenv("AMIQUERY_LISTEN_ADDRESS"); laddr != "" {
-		cfg.ListenAddr = laddr
 	}
 
 	// AWS regions to scan for AMIs.

@@ -155,7 +155,10 @@ func main() {
 
 	// Add the signal trapper.
 	g.Add(func() error {
-		return sigTrapper(ctx)
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+		defer signal.Stop(ch)
+		return sigTrapper(ctx, ch)
 	}, func(error) {
 		cancel()
 	})
@@ -167,10 +170,8 @@ func main() {
 	}
 }
 
-// Signal trapper.
-func sigTrapper(ctx context.Context) error {
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+// Signal trapper. It closes setup once it registers the signals.
+func sigTrapper(ctx context.Context, ch <-chan os.Signal) error {
 	select {
 	case sig := <-ch:
 		return fmt.Errorf("received signal %s", sig)
