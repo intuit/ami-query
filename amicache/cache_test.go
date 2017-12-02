@@ -164,16 +164,17 @@ func TestMinTTL(t *testing.T) {
 
 func TestCacheIsRunning(t *testing.T) {
 	c := newMockCache()
+	warmed := make(chan struct{})
 
-	go func() { c.Run(context.Background()) }()
+	go func() { c.Run(context.Background(), warmed) }()
 
-	<-c.Warmed()
+	<-warmed
 
 	if want, got := true, c.isRunning(); want != got {
 		t.Errorf("want: %t, got: %t", want, got)
 	}
 
-	if want, got := errCacheRunning, c.Run(context.Background()); want != got {
+	if want, got := errCacheRunning, c.Run(context.Background(), nil); want != got {
 		t.Errorf("want: %v, got: %v", want, got)
 	}
 
@@ -185,12 +186,15 @@ func TestCacheIsRunning(t *testing.T) {
 }
 
 func TestCacheStopped(t *testing.T) {
-	c := newMockCache()
-	errCh := make(chan error)
+	var (
+		c      = newMockCache()
+		errCh  = make(chan error)
+		warmed = make(chan struct{})
+	)
 
-	go func() { errCh <- c.Run(context.Background()) }()
+	go func() { errCh <- c.Run(context.Background(), warmed) }()
 
-	<-c.Warmed()
+	<-warmed
 	c.Stop()
 
 	if want, got := errCacheStopped, <-errCh; want != got {
@@ -199,13 +203,16 @@ func TestCacheStopped(t *testing.T) {
 }
 
 func TestCacheContextCanceled(t *testing.T) {
-	c := newMockCache()
-	errCh := make(chan error)
-	ctx, cancel := context.WithCancel(context.Background())
+	var (
+		c           = newMockCache()
+		errCh       = make(chan error)
+		warmed      = make(chan struct{})
+		ctx, cancel = context.WithCancel(context.Background())
+	)
 
-	go func() { errCh <- c.Run(ctx) }()
+	go func() { errCh <- c.Run(ctx, warmed) }()
 
-	<-c.Warmed()
+	<-warmed
 	cancel()
 
 	if want, got := context.Canceled, <-errCh; want != got {
@@ -215,11 +222,12 @@ func TestCacheContextCanceled(t *testing.T) {
 
 func TestImages(t *testing.T) {
 	c := newMockCache(Regions("us-west-1"))
+	warmed := make(chan struct{})
+
+	go func() { c.Run(context.Background(), warmed) }()
+
 	defer c.Stop()
-
-	go func() { c.Run(context.Background()) }()
-
-	<-c.Warmed()
+	<-warmed
 
 	images, err := c.Images("us-west-1")
 	if err != nil {
@@ -243,11 +251,12 @@ func TestImages(t *testing.T) {
 
 func TestFilteredImages(t *testing.T) {
 	c := newMockCache(Regions("us-west-1"))
+	warmed := make(chan struct{})
+
+	go func() { c.Run(context.Background(), warmed) }()
+
 	defer c.Stop()
-
-	go func() { c.Run(context.Background()) }()
-
-	<-c.Warmed()
+	<-warmed
 
 	images, err := c.FilterImages("us-west-1", NewFilter(FilterByImageID("ami-1a2b3c4d")))
 	if err != nil {

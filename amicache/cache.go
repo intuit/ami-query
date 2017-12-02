@@ -118,7 +118,6 @@ type Cache struct {
 	cache       map[string]Image    // The cache of AMIs
 	regionIndex map[string][]string // Image IDs index by region
 	mu          sync.RWMutex        // guards cache and regionIndex
-	warmed      chan struct{}       // A channel that blocks until the cache is warmed
 	regions     map[string]struct{} // The list of regions polled for AMIs
 	ttl         time.Duration       // Duration between updates to the cache (default: 15m)
 	maxRequests int                 // Max number of goroutines used for DescribeImageAttributes API requests.
@@ -140,7 +139,6 @@ func New(svc stsiface.STSAPI, roleName string, ownerIDs []string, options ...Opt
 		ownerIDs:    ownerIDs,
 		cache:       map[string]Image{},
 		regionIndex: map[string][]string{},
-		warmed:      make(chan struct{}),
 		regions:     awsStdRegions(),
 		ttl:         15 * time.Minute,
 		maxRequests: 15,
@@ -164,28 +162,31 @@ var (
 	errCacheStopped = errors.New("cache stopped")
 )
 
-// Run starts the cache and keeps it up to date.
-func (c *Cache) Run(ctx context.Context) error {
+// Run starts the cache and keeps it up to date. It closes warmed after the
+// first cache update completes.
+func (c *Cache) Run(ctx context.Context, warmed chan struct{}) error {
 	if c.isRunning() {
 		return errCacheRunning
 	}
 
 	atomic.AddInt32(&c.running, 1)
+	defer atomic.AddInt32(&c.running, -1)
 
-	defer func() {
-		atomic.AddInt32(&c.running, -1)
-		c.warmed = make(chan struct{})
-	}()
+	// Use a separate warmed channel in case the provided one is nil.
+	isWarmed := make(chan struct{})
 
 	go func() {
 		c.updateCache(ctx)
-		close(c.warmed)
+		close(isWarmed)
+		if warmed != nil {
+			close(warmed)
+		}
 	}()
 
 	for {
 		select {
 		case <-time.After(c.ttl):
-			<-c.warmed // wait just in case the initial update is taking awhile
+			<-isWarmed // wait just in case the initial update is taking awhile
 			c.updateCache(ctx)
 		case <-ctx.Done():
 			return ctx.Err()
@@ -204,9 +205,6 @@ func (c *Cache) Stop() {
 		<-quit
 	}
 }
-
-// Warmed returns a channel that blocks until the cache has been warmed.
-func (c *Cache) Warmed() <-chan struct{} { return c.warmed }
 
 // Images returns the cached images from the provided region.
 func (c *Cache) Images(region string) ([]Image, error) {
@@ -345,7 +343,9 @@ func (c *Cache) idsFromRegion(region string) ([]string, error) {
 func (c *Cache) assumeRole(account string) (*session.Session, error) {
 	rsp, err := c.svc.AssumeRole(&sts.AssumeRoleInput{
 		RoleArn:         aws.String(fmt.Sprintf("arn:aws:iam::%s:role/%s", account, c.roleName)),
+		Policy:          aws.String(policyDoc),
 		RoleSessionName: aws.String("ami-query"),
+		DurationSeconds: aws.Int64(900),
 	})
 	if err != nil {
 		return nil, err
@@ -463,3 +463,16 @@ func poolSize(max, queue int, percent float64) int {
 	}
 	return size
 }
+
+// The access policy required by ami-query.
+const policyDoc = `{
+	"Version": "2012-10-17",
+	"Statement": [{
+		"Effect": "Allow",
+		"Action": [
+			"ec2:DescribeImageAttribute",
+			"ec2:DescribeImages"
+		],
+		"Resource": "*"
+	}]
+}`

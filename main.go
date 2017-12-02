@@ -105,10 +105,10 @@ func main() {
 		sts.New(sess),
 		cfg.RoleName,
 		cfg.OwnerIDs,
+		amicache.Regions(cfg.Regions...),
 		amicache.TTL(cfg.CacheTTL),
 		amicache.MaxConcurrentRequests(cfg.CacheMaxConcurrentRequests),
 		amicache.MaxRequestRetries(cfg.CacheMaxRequestRetries),
-		amicache.Regions(cfg.Regions...),
 		amicache.HTTPClient(httpClient),
 		amicache.Logger(logger),
 	)
@@ -128,7 +128,7 @@ func main() {
 
 	// Add the cache.
 	g.Add(func() error {
-		return cache.Run(ctx)
+		return cache.Run(ctx, nil)
 	}, func(error) {
 		level.Info(logger).Log("msg", "stopping cache")
 		cache.Stop()
