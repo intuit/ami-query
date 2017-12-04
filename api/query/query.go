@@ -26,6 +26,7 @@ type API struct {
 // Result contains the matching AMIs for a query.
 type Result struct {
 	ID                 string            `json:"id"`
+	OwnerID            string            `json:"owner_id"`
 	Region             string            `json:"region"`
 	Name               string            `json:"name"`
 	Description        string            `json:"description"`
@@ -68,6 +69,7 @@ func (a *API) EncodeTo(w http.ResponseWriter, p *Params, images []amicache.Image
 	results := []Result{}
 	for _, image := range images {
 		results = append(results, Result{
+			OwnerID:            image.OwnerID,
 			Region:             image.Region,
 			ID:                 aws.StringValue(image.Image.ImageId),
 			Name:               aws.StringValue(image.Image.Name),
@@ -100,7 +102,8 @@ func (a *API) getImages(p *Params) ([]amicache.Image, error) {
 	images := []amicache.Image{}
 	filter := amicache.NewFilter(
 		amicache.FilterByImageID(p.images...),
-		amicache.FilterByAccountID(p.acctID),
+		amicache.FilterByOwnerID(p.ownerID),
+		amicache.FilterByLaunchPermission(p.launchPerm),
 		amicache.FilterByTags(p.tags),
 	)
 	for _, region := range p.regions {

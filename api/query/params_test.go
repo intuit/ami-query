@@ -52,13 +52,23 @@ func TestDecode(t *testing.T) {
 			},
 		},
 		{
-			"account_id",
-			"account_id=foo&account_id=bar&account_id=foo",
+			"owner_id",
+			"owner_id=foo&owner_id=bar&owner_id=foo",
 			Params{
-				acctID:  "foo",
+				ownerID: "foo",
 				regions: []string{},
 				images:  []string{},
 				tags:    map[string][]string{},
+			},
+		},
+		{
+			"launch_permission",
+			"launch_permission=foo&launch_permission=bar&launch_permission=foo",
+			Params{
+				launchPerm: "foo",
+				regions:    []string{},
+				images:     []string{},
+				tags:       map[string][]string{},
 			},
 		},
 		{

@@ -14,6 +14,7 @@ import (
 func testImages() []Image {
 	return []Image{
 		{
+			OwnerID: "123456789012",
 			Image: &ec2.Image{
 				CreationDate: aws.String("2017-10-29T16:00:00.000Z"),
 				ImageId:      aws.String("ami-1a2b3c4d"),
@@ -22,9 +23,10 @@ func testImages() []Image {
 					Value: aws.String("available"),
 				}},
 			},
-			launchPerms: []string{"111111111111", "111111111112"},
+			launchPerms: []string{"123456789012", "123456789013"},
 		},
 		{
+			OwnerID: "123456789012",
 			Image: &ec2.Image{
 				CreationDate: aws.String("2017-05-15T16:00:00.000Z"),
 				ImageId:      aws.String("ami-2a2b3c4d"),
@@ -33,9 +35,10 @@ func testImages() []Image {
 					Value: aws.String("deprecated"),
 				}},
 			},
-			launchPerms: []string{"111111111111"},
+			launchPerms: []string{"123456789012"},
 		},
 		{
+			OwnerID: "123456789012",
 			Image: &ec2.Image{
 				CreationDate: aws.String("2017-10-25T16:00:00.000Z"),
 				ImageId:      aws.String("ami-3a2b3c4d"),
@@ -44,9 +47,10 @@ func testImages() []Image {
 					Value: aws.String("available"),
 				}},
 			},
-			launchPerms: []string{"111111111111"},
+			launchPerms: []string{"123456789012"},
 		},
 		{
+			OwnerID: "123456789013",
 			Image: &ec2.Image{
 				CreationDate: aws.String("2017-10-25T16:00:00.000Z"),
 				ImageId:      aws.String("ami-4a2b3c4d"),
@@ -55,7 +59,7 @@ func testImages() []Image {
 					Value: aws.String("exception"),
 				}},
 			},
-			launchPerms: []string{"111111111112"},
+			launchPerms: []string{"123456789013"},
 		},
 	}
 }
@@ -117,19 +121,39 @@ func TestFilterByTags(t *testing.T) {
 	}
 }
 
-func TestFilterByAccountID(t *testing.T) {
+func TestFilterByOwnerID(t *testing.T) {
 	tests := []struct {
 		name string
 		id   string
 		want int
 	}{
-		{"acct_1", "111111111111", 3},
-		{"acct_2", "111111111112", 2},
-		{"no_acct", "", 4},
+		{"owner_3_img", "123456789012", 3},
+		{"owner_1_img", "123456789013", 1},
+		{"no_owner", "", 4},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			images := FilterByAccountID(tt.id).Filter(testImages())
+			images := FilterByOwnerID(tt.id).Filter(testImages())
+			if got := len(images); tt.want != got {
+				t.Errorf("want: %d image(s), got %d image(s)", tt.want, got)
+			}
+		})
+	}
+}
+
+func TestFilterByLaunchPermission(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		want int
+	}{
+		{"perm_3_img", "123456789012", 3},
+		{"perm_2_img", "123456789013", 2},
+		{"no_perm", "", 4},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			images := FilterByLaunchPermission(tt.id).Filter(testImages())
 			if got := len(images); tt.want != got {
 				t.Errorf("want: %d image(s), got %d image(s)", tt.want, got)
 			}

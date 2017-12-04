@@ -411,6 +411,7 @@ func getImagesFromOwner(svc ec2iface.EC2API, logger log.Logger, owner, region st
 			index = append(index, *image.ImageId)
 			images = append(images, Image{
 				Image:       image,
+				OwnerID:     owner,
 				Region:      region,
 				launchPerms: perms,
 			})

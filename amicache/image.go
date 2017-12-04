@@ -41,13 +41,19 @@ var stateWeight = map[string]uint64{
 // Image represents an Amazon Machine Image.
 type Image struct {
 	Image       *ec2.Image
+	OwnerID     string
 	Region      string
 	launchPerms []string
 }
 
 // NewImage returns a new Image from the provided ec2.Image and region.
-func NewImage(image *ec2.Image, region string, perms []string) Image {
-	return Image{Image: image, Region: region, launchPerms: perms}
+func NewImage(image *ec2.Image, ownerID, region string, perms []string) Image {
+	return Image{
+		Image:       image,
+		OwnerID:     ownerID,
+		Region:      region,
+		launchPerms: perms,
+	}
 }
 
 // Tag returns the value of the provided tag key. An empty string is returned if

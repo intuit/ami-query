@@ -14,12 +14,13 @@ import (
 
 // Params defines all the dimensions of a query.
 type Params struct {
-	regions  []string
-	images   []string
-	tags     map[string][]string
-	acctID   string
-	callback string
-	pretty   bool
+	regions    []string
+	images     []string
+	tags       map[string][]string
+	ownerID    string
+	launchPerm string
+	callback   string
+	pretty     bool
 }
 
 // Decode populates a Params from a URL.
@@ -50,8 +51,10 @@ func (p *Params) Decode(u *url.URL) error {
 			p.images = values
 		case "region":
 			p.regions = values
-		case "account_id":
-			p.acctID = values[0]
+		case "owner_id":
+			p.ownerID = values[0]
+		case "launch_permission":
+			p.launchPerm = values[0]
 		case "callback":
 			p.callback = values[0]
 		case "pretty":

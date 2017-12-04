@@ -81,18 +81,34 @@ func FilterByTags(tags map[string][]string) FilterFunc {
 	})
 }
 
-// FilterByAccountID returns images that have the account id in its
-// launch permissions.
-func FilterByAccountID(id string) FilterFunc {
+// FilterByOwnerID returns only the images owned by the provided owner ID.
+func FilterByOwnerID(id string) FilterFunc {
 	return FilterFunc(func(images []Image) []Image {
 		if id == "" {
 			return images
 		}
 		newImages := []Image{}
-		for _, image := range images {
-			for _, iid := range image.launchPerms {
+		for i := range images {
+			if id == images[i].OwnerID {
+				newImages = append(newImages, images[i])
+			}
+		}
+		return newImages
+	})
+}
+
+// FilterByLaunchPermission returns images that have the account id in its
+// launch permissions.
+func FilterByLaunchPermission(id string) FilterFunc {
+	return FilterFunc(func(images []Image) []Image {
+		if id == "" {
+			return images
+		}
+		newImages := []Image{}
+		for i := range images {
+			for _, iid := range images[i].launchPerms {
 				if id == iid {
-					newImages = append(newImages, image)
+					newImages = append(newImages, images[i])
 					break
 				}
 			}

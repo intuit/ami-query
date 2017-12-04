@@ -21,6 +21,7 @@ func TestTags(t *testing.T) {
 			}},
 		},
 		"foo",
+		"bar",
 		[]string{"foo"},
 	)
 

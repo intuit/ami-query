@@ -27,7 +27,8 @@ func (mockCache) Regions() []string {
 func (m *mockCache) FilterImages(string, *amicache.Filter) ([]amicache.Image, error) {
 	images := []amicache.Image{
 		{
-			Region: "us-west-2",
+			OwnerID: "123456789012",
+			Region:  "us-west-2",
 			Image: &ec2.Image{
 				Name:               aws.String("test-ami-1"),
 				Description:        aws.String("Test AMI 1"),
