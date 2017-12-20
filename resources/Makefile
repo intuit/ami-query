@@ -1,5 +1,5 @@
 NAME       = ami-query
-VERSION    = 1.1.0
+VERSION := $(shell grep '^const version' ../version.go | awk -F\" '{print $$2}')
 RPM_TOPDIR = "$(shell pwd)/rpmbuild"
 
 RPMBUILD_ARGS := \
@@ -7,8 +7,7 @@ RPMBUILD_ARGS := \
 	--define "name $(NAME)" \
 	--define "version $(VERSION)"
 
-.PHONY: all clean
-
+.PHONY: all
 all: clean
 	@mkdir -p $(RPM_TOPDIR)/{BUILD,RPMS,SRPMS}
 	@mkdir -p $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION)
@@ -18,6 +17,12 @@ all: clean
 	@rpmbuild $(RPMBUILD_ARGS) -ba --clean ./rhel/$(NAME).spec
 	@cp -p $(RPM_TOPDIR)/RPMS/x86_64/$(NAME)-$(VERSION)*.x86_64.rpm ../
 
+.PHONY: clean
 clean:
-	@echo "==> Cleaning up previous RPMs builds."
 	@rm -rf $(RPM_TOPDIR)
+
+.PHONY: check-version
+check-version:
+ifndef VERSION
+	$(error VERSION is undefined)
+endif

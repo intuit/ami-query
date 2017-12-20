@@ -4,72 +4,66 @@
 
 package amicache
 
-import (
-	"github.com/intuit/ami-query/ami"
-)
-
-// Filterer is an interface used to apply specific filters on a slice of
-// ami.AMI objects.
+// Filterer is an interface used to apply specified filters on a slice of
+// Image objects.
 type Filterer interface {
-	Filter([]ami.AMI) []ami.AMI
+	Filter([]Image) []Image
 }
 
-// Filter is used to filter ami.AMI objects.
+// Filter is used to filter Image objects.
 type Filter struct {
 	filters []Filterer
 }
 
-// NewFilter creates a new Filter with the specified Filterer interfaces.
+// NewFilter creates a new Filter.
 func NewFilter(filters ...Filterer) *Filter {
 	return &Filter{filters: filters}
 }
 
-// Apply returns the filtered amis.
-func (f *Filter) Apply(amis []ami.AMI) []ami.AMI {
+// Apply returns the filtered images.
+func (f *Filter) Apply(images []Image) []Image {
 	for _, f := range f.filters {
-		amis = f.Filter(amis)
+		images = f.Filter(images)
 	}
-	return amis
+	return images
 }
 
 // The FilterFunc type is an adapter to allow the use of ordinary functions as
 // filter handlers. If f is a function with the appropriate signature,
 // FilterFunc(f) is a Filterer object that calls f.
-type FilterFunc func([]ami.AMI) []ami.AMI
+type FilterFunc func([]Image) []Image
 
-// Filter returns f(a).
-func (f FilterFunc) Filter(a []ami.AMI) []ami.AMI {
-	return f(a)
-}
+// Filter implements the Filterer interface.
+func (f FilterFunc) Filter(images []Image) []Image { return f(images) }
 
-// FilterByID filters on one or more AMI IDs.
-func FilterByID(ids ...string) FilterFunc {
-	return FilterFunc(func(amis []ami.AMI) []ami.AMI {
+// FilterByImageID returns images with matching AMI ids.
+func FilterByImageID(ids ...string) FilterFunc {
+	return FilterFunc(func(images []Image) []Image {
 		if len(ids) == 0 {
-			return amis
+			return images
 		}
-		var newAMIs []ami.AMI
-		for i := range amis {
+		newImages := []Image{}
+		for i := range images {
 			for _, id := range ids {
-				if id == *amis[i].Image.ImageId {
-					newAMIs = append(newAMIs, amis[i])
+				if id == *images[i].Image.ImageId {
+					newImages = append(newImages, images[i])
 				}
 			}
 		}
-		return newAMIs
+		return newImages
 	})
 }
 
-// FilterByTags filters on a set of tags.
+// FilterByTags returns images with matching tags.
 func FilterByTags(tags map[string][]string) FilterFunc {
-	return FilterFunc(func(amis []ami.AMI) []ami.AMI {
+	return FilterFunc(func(images []Image) []Image {
 		if len(tags) == 0 {
-			return amis
+			return images
 		}
-		var newAMIs []ami.AMI
-		for i := range amis {
+		newImages := []Image{}
+		for i := range images {
 			tagMatches := 0
-			for _, tag := range amis[i].Image.Tags {
+			for _, tag := range images[i].Image.Tags {
 				if values, ok := tags[*tag.Key]; ok {
 					for _, val := range values {
 						if val == *tag.Value {
@@ -80,9 +74,45 @@ func FilterByTags(tags map[string][]string) FilterFunc {
 				}
 			}
 			if tagMatches == len(tags) {
-				newAMIs = append(newAMIs, amis[i])
+				newImages = append(newImages, images[i])
 			}
 		}
-		return newAMIs
+		return newImages
+	})
+}
+
+// FilterByOwnerID returns only the images owned by the provided owner ID.
+func FilterByOwnerID(id string) FilterFunc {
+	return FilterFunc(func(images []Image) []Image {
+		if id == "" {
+			return images
+		}
+		newImages := []Image{}
+		for i := range images {
+			if id == images[i].OwnerID {
+				newImages = append(newImages, images[i])
+			}
+		}
+		return newImages
+	})
+}
+
+// FilterByLaunchPermission returns images that have the account id in its
+// launch permissions.
+func FilterByLaunchPermission(id string) FilterFunc {
+	return FilterFunc(func(images []Image) []Image {
+		if id == "" {
+			return images
+		}
+		newImages := []Image{}
+		for i := range images {
+			for _, iid := range images[i].launchPerms {
+				if id == iid {
+					newImages = append(newImages, images[i])
+					break
+				}
+			}
+		}
+		return newImages
 	})
 }
