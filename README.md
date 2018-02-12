@@ -71,6 +71,11 @@ The configuration is handled through the following environment variables.
   value is `ip_addr:port` or `hostname:port`. The default value is
   `localhost:8080`.
 
+* **AMIQUERY_TAG_FILTER**
+
+  The tag-key name used to filter the results of ec2:DescribeImages. The value
+  is irrelevant, only the existence of the tag is required.
+
 * **AMIQUERY_REGIONS**
 
   A comma-separated list of regions that `ami-query` will scan for AMIs. Use

@@ -105,6 +105,7 @@ func main() {
 		sts.New(sess),
 		cfg.RoleName,
 		cfg.OwnerIDs,
+		amicache.TagFilter(cfg.TagFilter),
 		amicache.Regions(cfg.Regions...),
 		amicache.TTL(cfg.CacheTTL),
 		amicache.MaxConcurrentRequests(cfg.CacheMaxConcurrentRequests),
@@ -126,9 +127,12 @@ func main() {
 	g := group.Group{}
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Used to block on waiting for the cache to warm.
+	warmed := make(chan struct{})
+
 	// Add the cache.
 	g.Add(func() error {
-		return cache.Run(ctx, nil)
+		return cache.Run(ctx, warmed)
 	}, func(error) {
 		level.Info(logger).Log("msg", "stopping cache")
 		cache.Stop()
@@ -138,6 +142,7 @@ func main() {
 
 	// Add the http server.
 	g.Add(func() error {
+		<-warmed // Wait for the cache
 		if cfg.SSLCert != "" && cfg.SSLKey != "" {
 			return server.ListenAndServeTLS(cfg.SSLCert, cfg.SSLKey)
 		}

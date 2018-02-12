@@ -40,6 +40,14 @@ type optionFunc func(*Cache)
 
 func (fn optionFunc) set(m *Cache) { fn(m) }
 
+// TagFilter sets the tag-key used to filter the results of ec2:DescribeImages.
+// The value is irrelevant, only the existence of the tag is required.
+func TagFilter(tag string) Option {
+	return optionFunc(func(c *Cache) {
+		c.tagFilter = tag
+	})
+}
+
 // Regions sets the AWS standard regions that will be polled for AMIs.
 func Regions(regions ...string) Option {
 	return optionFunc(func(c *Cache) {
@@ -119,6 +127,7 @@ type Cache struct {
 	regionIndex map[string][]string // Image IDs index by region
 	mu          sync.RWMutex        // guards cache and regionIndex
 	regions     map[string]struct{} // The list of regions polled for AMIs
+	tagFilter   string              // The name of a tag used to filter ec2:DescribeImages
 	ttl         time.Duration       // Duration between updates to the cache (default: 15m)
 	maxRequests int                 // Max number of goroutines used for DescribeImageAttributes API requests.
 	maxRetries  int                 // Max number of retries for DescribeImageAttributes API requests.
@@ -282,7 +291,7 @@ func (c *Cache) updateCache(ctx context.Context) {
 					logger := log.With(logger, "region", region)
 
 					svc := c.ec2Svc(sess, region, c.maxRetries)
-					images, index := getImagesFromOwner(svc, logger, owner, region, c.maxRequests)
+					images, index := getImagesFromOwner(svc, logger, owner, region, c.tagFilter, c.maxRequests)
 
 					mu.Lock()
 					newIndex[region] = append(newIndex[region], index...)
@@ -363,15 +372,19 @@ func (c *Cache) assumeRole(account string) (*session.Session, error) {
 // getImagesFromOwner gets the images and assoicated launch permissions from the
 // provided owner. In accounts with a large number of AMIs (~150 or more), this
 // may hit RequestLimitExeeded and trigger retries.
-func getImagesFromOwner(svc ec2iface.EC2API, logger log.Logger, owner, region string, maxReq int) ([]Image, []string) {
-	rsp, err := svc.DescribeImages(&ec2.DescribeImagesInput{
+func getImagesFromOwner(svc ec2iface.EC2API, logger log.Logger, owner, region, tagFilter string, maxReq int) ([]Image, []string) {
+	input := &ec2.DescribeImagesInput{
 		Owners: []*string{aws.String(owner)},
-		// TODO: require a specific tag? e.g.:
-		// Filters: []*ec2.Filter{{
-		// 	Name:   aws.String("tag-key"),
-		// 	Values: []*string{aws.String("ami-query-enabled")},
-		// }},
-	})
+	}
+
+	if tagFilter != "" {
+		input.Filters = []*ec2.Filter{{
+			Name:   aws.String("tag-key"),
+			Values: []*string{aws.String(tagFilter)},
+		}}
+	}
+
+	rsp, err := svc.DescribeImages(input)
 	if err != nil {
 		level.Warn(logger).Log("cache_update", "failed", "error", awsError(err))
 		return []Image{}, []string{}

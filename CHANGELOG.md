@@ -2,6 +2,13 @@
 
 ### Added
 
+* Ability to filter AMIs cached from accounts based on a key-tag. Set via the
+  `AMIQUERY_TAG_FILTER` environment variable.
+
+## [2.0.0] - 2017-12-19
+
+### Added
+
 * Ability cache AMIs from mulitple accounts (requires an IAM role).
 * Caches the Launch Permissions for an AMI.
 * New query paramter, `account_id=123456789012`, to filter on AMIs said account

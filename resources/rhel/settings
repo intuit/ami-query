@@ -40,6 +40,12 @@ AMIQUERY_OWNER_IDS=
 #AWS_SECRET_ACCESS_KEY=
 
 #
+# The tag-key name used to filter the results of ec2:DescribeImages. The value
+# is irrelevant, only the existence of the tag is required.
+#
+#AMIQUERY_TAG_FILTER=
+
+#
 # The regions to query for AMIs. The value must be a comma-separated list of
 # regions (e.g. "us-east-1,us-west-1"). If undefined, all AWS Standard Regions
 # will be used.

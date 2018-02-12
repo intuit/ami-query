@@ -40,6 +40,7 @@ func TestConfig(t *testing.T) {
 			vars: map[string]string{
 				"AMIQUERY_LISTEN_ADDRESS":                ":8081",
 				"AMIQUERY_ROLE_NAME":                     "foo",
+				"AMIQUERY_TAG_FILTER":                    "foo",
 				"AMIQUERY_OWNER_IDS":                     "123456789012,123456789013",
 				"AMIQUERY_REGIONS":                       "us-west-1,us-west-2",
 				"AMIQUERY_CACHE_TTL":                     "20m",
@@ -53,6 +54,7 @@ func TestConfig(t *testing.T) {
 			want: &Config{
 				ListenAddr:                 ":8081",
 				RoleName:                   "foo",
+				TagFilter:                  "foo",
 				Regions:                    []string{"us-west-1", "us-west-2"},
 				OwnerIDs:                   []string{"123456789012", "123456789013"},
 				CacheTTL:                   20 * time.Minute,
@@ -136,6 +138,7 @@ func clearVars() error {
 	vars := []string{
 		"AMIQUERY_LISTEN_ADDRESS",
 		"AMIQUERY_ROLE_NAME",
+		"AMIQUERY_TAG_FILTER",
 		"AMIQUERY_OWNER_IDS",
 		"AMIQUERY_REGIONS",
 		"AMIQUERY_CACHE_TTL",
