@@ -48,6 +48,7 @@ func TestConfig(t *testing.T) {
 				"AMIQUERY_CACHE_MAX_REQUEST_RETRIES":     "1",
 				"AMIQUERY_APP_LOGFILE":                   "/tmp/app.log",
 				"AMIQUERY_HTTP_LOGFILE":                  "/tmp/http.log",
+				"AMIQUERY_CORS_ALLOWED_ORIGINS":          "foo.com, bar.com , baz.com",
 				"SSL_CERTIFICATE_FILE":                   "/tmp/test.crt",
 				"SSL_KEY_FILE":                           "/tmp/test.key",
 			},
@@ -62,6 +63,7 @@ func TestConfig(t *testing.T) {
 				CacheMaxRequestRetries:     1,
 				AppLog:                     "/tmp/app.log",
 				HTTPLog:                    "/tmp/http.log",
+				CorsAllowedOrigins:         []string{"foo.com", "bar.com", "baz.com"},
 				SSLCert:                    "/tmp/test.crt",
 				SSLKey:                     "/tmp/test.key",
 			},
@@ -146,6 +148,7 @@ func clearVars() error {
 		"AMIQUERY_CACHE_MAX_REQUEST_RETRIES",
 		"AMIQUERY_APP_LOGFILE",
 		"AMIQUERY_HTTP_LOGFILE",
+		"AMIQUERY_CORS_ALLOWED_ORIGINS",
 		"SSL_CERTIFICATE_FILE",
 		"SSL_KEY_FILE",
 	}

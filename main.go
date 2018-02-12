@@ -101,6 +101,7 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
+
 	cache := amicache.New(
 		sts.New(sess),
 		cfg.RoleName,
@@ -114,14 +115,21 @@ func main() {
 		amicache.Logger(logger),
 	)
 
-	// Register the query endpoint and use Apache Combined log format.
+	// Create the query endpoint and use Apache Combined log format.
 	api := handlers.CombinedLoggingHandler(httpLogger, query.NewAPI(cache))
+
+	// Optionally add CORS support for allowed Origins.
+	if len(cfg.CorsAllowedOrigins) > 0 {
+		api = handlers.CORS(
+			handlers.AllowedMethods([]string{"GET"}),
+			handlers.AllowedOrigins(cfg.CorsAllowedOrigins),
+		)(api)
+	}
+
+	// Register the route.
 	router.Handle(query.APIPathQuery, api).
 		HeadersRegexp("Accept", `(application/vnd\.ami-query-v1\+json|\*/\*)`).
 		Methods("GET")
-
-	// Register the router.
-	http.Handle("/", router)
 
 	// Create a group and context for running the services.
 	g := group.Group{}

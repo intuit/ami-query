@@ -24,6 +24,7 @@ type Config struct {
 	CacheMaxRequestRetries     int
 	AppLog                     string
 	HTTPLog                    string
+	CorsAllowedOrigins         []string
 	SSLCert                    string
 	SSLKey                     string
 }
@@ -83,6 +84,12 @@ func NewConfig() (*Config, error) {
 	if maxRetries := os.Getenv("AMIQUERY_CACHE_MAX_REQUEST_RETRIES"); maxRetries != "" {
 		if cfg.CacheMaxRequestRetries, err = strconv.Atoi(maxRetries); err != nil {
 			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_MAX_REQUEST_RETRIES: %v", err)
+		}
+	}
+
+	if origins := os.Getenv("AMIQUERY_CORS_ALLOWED_ORIGINS"); origins != "" {
+		for _, origin := range strings.Split(origins, ",") {
+			cfg.CorsAllowedOrigins = append(cfg.CorsAllowedOrigins, strings.TrimSpace(origin))
 		}
 	}
 
