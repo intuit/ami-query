@@ -63,14 +63,23 @@ func TestSortByState(t *testing.T) {
 				CreationDate: aws.String("2017-10-25T16:00:00.000Z"),
 				Tags: []*ec2.Tag{{
 					Key:   aws.String(StateTag),
+					Value: aws.String("foo"),
+				}},
+			},
+		}
+		img4 = Image{
+			Image: &ec2.Image{
+				CreationDate: aws.String("2017-10-25T16:00:00.000Z"),
+				Tags: []*ec2.Tag{{
+					Key:   aws.String(StateTag),
 					Value: aws.String("available"),
 				}},
 			},
 		}
 	)
 
-	images := []Image{img3, img2, img1}
-	sortedImages := []Image{img1, img3, img2}
+	images := []Image{img3, img2, img4, img1}
+	sortedImages := []Image{img1, img4, img2, img3}
 
 	SortByState(images)
 

@@ -97,11 +97,11 @@ func SortByState(images []Image) {
 
 		// Get the state tag
 		if state := images[i].Tag(StateTag); state != "" {
-			istate, _ = stateWeight[strings.ToLower(state)]
+			istate = stateWeight[strings.ToLower(state)]
 		}
 
 		if state := images[j].Tag(StateTag); state != "" {
-			jstate, _ = stateWeight[strings.ToLower(state)]
+			jstate = stateWeight[strings.ToLower(state)]
 		}
 
 		return icdate+istate > jcdate+jstate
