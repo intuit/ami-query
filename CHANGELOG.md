@@ -1,4 +1,11 @@
-## [Unreleased]
+## [2.0.1] - 2018-02-13
+
+### Added
+
+* Ability to filter AMIs cached from accounts based on a key-tag. Set via the
+  `AMIQUERY_TAG_FILTER` environment variable.
+
+## [2.0.0] - 2017-12-19
 
 ### Added
 

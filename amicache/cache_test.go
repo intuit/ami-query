@@ -118,6 +118,7 @@ func TestCacheOptions(t *testing.T) {
 		nil,
 		"foo",
 		[]string{"foo"},
+		TagFilter("foo"),
 		Regions("us-west-1"),
 		TTL(15*time.Minute),
 		MaxConcurrentRequests(1),
@@ -128,6 +129,10 @@ func TestCacheOptions(t *testing.T) {
 
 	if want, got := map[string]struct{}{"us-west-1": struct{}{}}, c.regions; !reflect.DeepEqual(want, got) {
 		t.Errorf("Bad Regions Map - want: %v, got: %v", want, got)
+	}
+
+	if want, got := "foo", c.tagFilter; want != got {
+		t.Errorf("Bad TagFilter - want: %s, got: %s", want, got)
 	}
 
 	if want, got := []string{"us-west-1"}, c.Regions(); !reflect.DeepEqual(want, got) {
@@ -221,7 +226,7 @@ func TestCacheContextCanceled(t *testing.T) {
 }
 
 func TestImages(t *testing.T) {
-	c := newMockCache(Regions("us-west-1"))
+	c := newMockCache(Regions("us-west-1"), TagFilter("foo"))
 	warmed := make(chan struct{})
 
 	go func() { c.Run(context.Background(), warmed) }()

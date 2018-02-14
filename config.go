@@ -16,6 +16,7 @@ import (
 type Config struct {
 	ListenAddr                 string
 	RoleName                   string
+	TagFilter                  string
 	OwnerIDs                   []string
 	Regions                    []string
 	CacheTTL                   time.Duration
@@ -35,6 +36,7 @@ func NewConfig() (*Config, error) {
 		ListenAddr: ":8080",
 		CacheTTL:   15 * time.Minute,
 		RoleName:   os.Getenv("AMIQUERY_ROLE_NAME"),
+		TagFilter:  os.Getenv("AMIQUERY_TAG_FILTER"),
 		AppLog:     os.Getenv("AMIQUERY_APP_LOGFILE"),
 		HTTPLog:    os.Getenv("AMIQUERY_HTTP_LOGFILE"),
 		SSLCert:    os.Getenv("SSL_CERTIFICATE_FILE"),
