@@ -91,6 +91,11 @@ AMIQUERY_OWNER_IDS=
 #AMIQUERY_HTTP_LOGFILE=/var/log/ami-query_http.log
 
 #
+# A comma-separated list of allowed Origins.
+#
+#AMIQUERY_CORS_ALLOWED_ORIGINS=
+
+#
 # The SSL certificate to use if running HTTPS.
 #
 #SSL_CERTIFICATE_FILE=

@@ -92,6 +92,10 @@ The configuration is handled through the following environment variables.
   The file location to send HTTP log messages. Note that `ami-query` does not
   manage this file, it only writes to it. The default is to log to STDERR.
 
+* **AMIQUERY_CORS_ALLOWED_ORIGINS**
+
+  A comma-separated list of allowed Origins.
+
 * **SSL_CERTIFICATE_FILE**
 
   The file location of the SSL certificate file. **SSL_KEY_FILE** also needs to

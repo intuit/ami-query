@@ -1,3 +1,10 @@
+## [2.1.0] - 2018-03-23
+
+### Added
+
+* Now supports CORS Origin header through the `AMIQUERY_CORS_ALLOWED_ORIGINS`
+  environment variable.
+
 ## [2.0.1] - 2018-02-13
 
 ### Added
