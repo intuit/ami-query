@@ -92,7 +92,7 @@ func newMockCache(opts ...Option) *Cache {
 							CreationDate:       aws.String("2017-11-29T16:00:00.000Z"),
 							ImageId:            aws.String("ami-1a2b3c4d"),
 							Tags: []*ec2.Tag{{
-								Key:   aws.String(StateTag),
+								Key:   aws.String(c.stateTag),
 								Value: aws.String("available"),
 							}},
 						},
@@ -119,6 +119,7 @@ func TestCacheOptions(t *testing.T) {
 		"foo",
 		[]string{"foo"},
 		TagFilter("foo"),
+		StateTag("foo"),
 		Regions("us-west-1"),
 		TTL(15*time.Minute),
 		MaxConcurrentRequests(1),
@@ -133,6 +134,10 @@ func TestCacheOptions(t *testing.T) {
 
 	if want, got := "foo", c.tagFilter; want != got {
 		t.Errorf("Bad TagFilter - want: %s, got: %s", want, got)
+	}
+
+	if want, got := "foo", c.stateTag; want != got {
+		t.Errorf("Bad StateTag - want: %s, got: %s", want, got)
 	}
 
 	if want, got := []string{"us-west-1"}, c.Regions(); !reflect.DeepEqual(want, got) {
@@ -164,6 +169,13 @@ func TestMinTTL(t *testing.T) {
 	c := New(nil, "foo", []string{"foo"}, TTL(time.Second))
 	if want, got := minCacheTTL, c.ttl; want != got {
 		t.Errorf("want: %s, got: %s", want, got)
+	}
+}
+
+func TestStateTagDefault(t *testing.T) {
+	c := New(nil, "foo", []string{})
+	if want, got := DefaultStateTag, c.StateTag(); want != got {
+		t.Errorf("want: %q, got: %q", want, got)
 	}
 }
 

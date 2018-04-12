@@ -45,7 +45,7 @@ func NewAPI(cache *amicache.Cache) *API {
 
 func (a *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p := &Params{}
-	if err := p.Decode(r.URL); err != nil {
+	if err := p.Decode(a.cache.StateTag(), r.URL); err != nil {
 		writeErr(w, err, http.StatusBadRequest)
 		return
 	}
@@ -113,7 +113,7 @@ func (a *API) getImages(p *Params) ([]amicache.Image, error) {
 		}
 		images = append(images, matched...)
 	}
-	amicache.SortByState(images)
+	amicache.SortByState(a.cache.StateTag(), images)
 	return images, nil
 }
 
@@ -134,6 +134,7 @@ func writeErr(w http.ResponseWriter, err error, status int) {
 
 // cacher is used to represent an amicache.Cache. Used to mock the cache in tests.
 type cacher interface {
-	Regions() []string
 	FilterImages(string, *amicache.Filter) ([]amicache.Image, error)
+	Regions() []string
+	StateTag() string
 }

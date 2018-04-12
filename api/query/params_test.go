@@ -20,13 +20,13 @@ func TestDecode(t *testing.T) {
 		want  Params
 	}{
 		{
-			amicache.StateTag,
-			fmt.Sprintf("%s=available&%[1]s=deprecated&%[1]s=available", amicache.StateTag),
+			amicache.DefaultStateTag,
+			fmt.Sprintf("%s=available&%[1]s=deprecated&%[1]s=available", amicache.DefaultStateTag),
 			Params{
 				regions: []string{},
 				images:  []string{},
 				tags: map[string][]string{
-					amicache.StateTag: []string{"available", "deprecated"},
+					amicache.DefaultStateTag: []string{"available", "deprecated"},
 				},
 			},
 		},
@@ -39,6 +39,18 @@ func TestDecode(t *testing.T) {
 				tags: map[string][]string{
 					"foo1": []string{"bar", "baz"},
 					"foo2": []string{"bar", "baz"},
+				},
+			},
+		},
+		{
+			"tags_with_colon",
+			"tag=foo1:bar&tag=foo2:bar:baz:bot&tag=foo2:bar&tag=foo1:baz&tag=foo2:bar:baz",
+			Params{
+				regions: []string{},
+				images:  []string{},
+				tags: map[string][]string{
+					"foo1": []string{"bar", "baz"},
+					"foo2": []string{"bar:baz:bot", "bar", "bar:baz"},
 				},
 			},
 		},
@@ -95,7 +107,7 @@ func TestDecode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := Params{}
-			if err := p.Decode(&url.URL{RawQuery: tt.query}); err != nil {
+			if err := p.Decode(amicache.DefaultStateTag, &url.URL{RawQuery: tt.query}); err != nil {
 				t.Fatal(err)
 			}
 			if !reflect.DeepEqual(tt.want, p) {
@@ -107,7 +119,7 @@ func TestDecode(t *testing.T) {
 
 func TestDecodeBadKey(t *testing.T) {
 	p := &Params{}
-	err := p.Decode(&url.URL{RawQuery: "foo=bar"})
+	err := p.Decode(amicache.DefaultStateTag, &url.URL{RawQuery: "foo=bar"})
 	if want, got := "unknown query key: foo", err.Error(); want != got {
 		t.Errorf("\n\twant err: %q\n\t got err: %q", want, got)
 	}
@@ -115,15 +127,15 @@ func TestDecodeBadKey(t *testing.T) {
 
 func TestDecodeBadTagValue(t *testing.T) {
 	p := &Params{}
-	err := p.Decode(&url.URL{RawQuery: "tag=foo:bar:baz"})
-	if want, got := "invalid query tag value: foo:bar:baz", err.Error(); want != got {
+	err := p.Decode(amicache.DefaultStateTag, &url.URL{RawQuery: "tag=foobar"})
+	if want, got := "invalid query tag value: foobar", err.Error(); want != got {
 		t.Errorf("\n\twant err: %q\n\t got err: %q", want, got)
 	}
 }
 
 func TestDecodeParseError(t *testing.T) {
 	p := &Params{}
-	err := p.Decode(&url.URL{RawQuery: `foo=%%bar`})
+	err := p.Decode(amicache.DefaultStateTag, &url.URL{RawQuery: `foo=%%bar`})
 	if want, got := `invalid URL escape "%%b"`, err.Error(); want != got {
 		t.Errorf("\n\twant err: %q\n\t got err: %q", want, got)
 	}

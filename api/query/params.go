@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-
-	"github.com/intuit/ami-query/amicache"
 )
 
 // Params defines all the dimensions of a query.
@@ -24,7 +22,7 @@ type Params struct {
 }
 
 // Decode populates a Params from a URL.
-func (p *Params) Decode(u *url.URL) error {
+func (p *Params) Decode(stateTag string, u *url.URL) error {
 	params, err := url.ParseQuery(u.RawQuery)
 	if err != nil {
 		return err
@@ -39,14 +37,14 @@ func (p *Params) Decode(u *url.URL) error {
 		switch key {
 		case "tag":
 			for _, value := range values {
-				tag := strings.Split(value, ":")
-				if len(tag) != 2 {
+				if i := strings.Index(value, ":"); i != -1 {
+					p.tags[value[:i]] = append(p.tags[value[:i]], value[i+1:])
+				} else {
 					return fmt.Errorf("invalid query tag value: %s", value)
 				}
-				p.tags[tag[0]] = append(p.tags[tag[0]], tag[1])
 			}
-		case amicache.StateTag:
-			p.tags[amicache.StateTag] = append(p.tags[amicache.StateTag], values...)
+		case stateTag, "state", "status": // aliases for the state tag
+			p.tags[stateTag] = append(p.tags[stateTag], values...)
 		case "ami":
 			p.images = values
 		case "region":

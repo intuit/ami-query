@@ -19,7 +19,7 @@ func testImages() []Image {
 				CreationDate: aws.String("2017-10-29T16:00:00.000Z"),
 				ImageId:      aws.String("ami-1a2b3c4d"),
 				Tags: []*ec2.Tag{{
-					Key:   aws.String(StateTag),
+					Key:   aws.String(DefaultStateTag),
 					Value: aws.String("available"),
 				}},
 			},
@@ -31,7 +31,7 @@ func testImages() []Image {
 				CreationDate: aws.String("2017-05-15T16:00:00.000Z"),
 				ImageId:      aws.String("ami-2a2b3c4d"),
 				Tags: []*ec2.Tag{{
-					Key:   aws.String(StateTag),
+					Key:   aws.String(DefaultStateTag),
 					Value: aws.String("deprecated"),
 				}},
 			},
@@ -43,7 +43,7 @@ func testImages() []Image {
 				CreationDate: aws.String("2017-10-25T16:00:00.000Z"),
 				ImageId:      aws.String("ami-3a2b3c4d"),
 				Tags: []*ec2.Tag{{
-					Key:   aws.String(StateTag),
+					Key:   aws.String(DefaultStateTag),
 					Value: aws.String("available"),
 				}},
 			},
@@ -55,7 +55,7 @@ func testImages() []Image {
 				CreationDate: aws.String("2017-10-25T16:00:00.000Z"),
 				ImageId:      aws.String("ami-4a2b3c4d"),
 				Tags: []*ec2.Tag{{
-					Key:   aws.String(StateTag),
+					Key:   aws.String(DefaultStateTag),
 					Value: aws.String("exception"),
 				}},
 			},
@@ -92,17 +92,17 @@ func TestFilterByTags(t *testing.T) {
 	}{
 		{
 			"state_available",
-			map[string][]string{StateTag: []string{"available"}},
+			map[string][]string{DefaultStateTag: []string{"available"}},
 			2,
 		},
 		{
 			"state_deprecated",
-			map[string][]string{StateTag: []string{"deprecated"}},
+			map[string][]string{DefaultStateTag: []string{"deprecated"}},
 			1,
 		},
 		{
 			"state_deprecated_exception",
-			map[string][]string{StateTag: []string{"deprecated", "exception"}},
+			map[string][]string{DefaultStateTag: []string{"deprecated", "exception"}},
 			2,
 		},
 		{

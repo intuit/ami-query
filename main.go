@@ -107,6 +107,7 @@ func main() {
 		cfg.RoleName,
 		cfg.OwnerIDs,
 		amicache.TagFilter(cfg.TagFilter),
+		amicache.StateTag(cfg.StateTag),
 		amicache.Regions(cfg.Regions...),
 		amicache.TTL(cfg.CacheTTL),
 		amicache.MaxConcurrentRequests(cfg.CacheMaxConcurrentRequests),

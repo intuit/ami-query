@@ -48,6 +48,15 @@ func TagFilter(tag string) Option {
 	})
 }
 
+// StateTag sets the tag-key used to determine the state of an AMI.
+func StateTag(tag string) Option {
+	return optionFunc(func(c *Cache) {
+		if tag != "" {
+			c.stateTag = tag
+		}
+	})
+}
+
 // Regions sets the AWS standard regions that will be polled for AMIs.
 func Regions(regions ...string) Option {
 	return optionFunc(func(c *Cache) {
@@ -128,6 +137,7 @@ type Cache struct {
 	mu          sync.RWMutex        // guards cache and regionIndex
 	regions     map[string]struct{} // The list of regions polled for AMIs
 	tagFilter   string              // The name of a tag used to filter ec2:DescribeImages
+	stateTag    string              // The name of a tag used to determine the state of an AMI
 	ttl         time.Duration       // Duration between updates to the cache (default: 15m)
 	maxRequests int                 // Max number of goroutines used for DescribeImageAttributes API requests.
 	maxRetries  int                 // Max number of retries for DescribeImageAttributes API requests.
@@ -149,6 +159,7 @@ func New(svc stsiface.STSAPI, roleName string, ownerIDs []string, options ...Opt
 		cache:       map[string]Image{},
 		regionIndex: map[string][]string{},
 		regions:     awsStdRegions(),
+		stateTag:    DefaultStateTag,
 		ttl:         15 * time.Minute,
 		maxRequests: 15,
 		maxRetries:  5,
@@ -246,6 +257,11 @@ func (c *Cache) Regions() []string {
 		regions = append(regions, region)
 	}
 	return regions
+}
+
+// StateTag returns the name of the tag used to determine an AMI's state.
+func (c *Cache) StateTag() string {
+	return c.stateTag
 }
 
 // setOptions configures a Manager.
