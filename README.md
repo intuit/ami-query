@@ -76,6 +76,11 @@ The configuration is handled through the following environment variables.
   The tag-key name used to filter the results of ec2:DescribeImages. The value
   is irrelevant, only the existence of the tag is required.
 
+* **AMIQUERY_STATE_TAG**
+
+  The tag-key name used to determine the state of an AMI. The default value is
+  "state".
+
 * **AMIQUERY_REGIONS**
 
   A comma-separated list of regions that `ami-query` will scan for AMIs. Use
