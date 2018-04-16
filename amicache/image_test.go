@@ -44,7 +44,7 @@ func TestSortByState(t *testing.T) {
 			Image: &ec2.Image{
 				CreationDate: aws.String("2017-10-29T16:00:00.000Z"),
 				Tags: []*ec2.Tag{{
-					Key:   aws.String(StateTag),
+					Key:   aws.String(DefaultStateTag),
 					Value: aws.String("available"),
 				}},
 			},
@@ -53,7 +53,7 @@ func TestSortByState(t *testing.T) {
 			Image: &ec2.Image{
 				CreationDate: aws.String("2017-05-15T16:00:00.000Z"),
 				Tags: []*ec2.Tag{{
-					Key:   aws.String(StateTag),
+					Key:   aws.String(DefaultStateTag),
 					Value: aws.String("deprecated"),
 				}},
 			},
@@ -62,7 +62,7 @@ func TestSortByState(t *testing.T) {
 			Image: &ec2.Image{
 				CreationDate: aws.String("2017-10-25T16:00:00.000Z"),
 				Tags: []*ec2.Tag{{
-					Key:   aws.String(StateTag),
+					Key:   aws.String(DefaultStateTag),
 					Value: aws.String("foo"),
 				}},
 			},
@@ -71,7 +71,7 @@ func TestSortByState(t *testing.T) {
 			Image: &ec2.Image{
 				CreationDate: aws.String("2017-10-25T16:00:00.000Z"),
 				Tags: []*ec2.Tag{{
-					Key:   aws.String(StateTag),
+					Key:   aws.String(DefaultStateTag),
 					Value: aws.String("available"),
 				}},
 			},
@@ -81,7 +81,7 @@ func TestSortByState(t *testing.T) {
 	images := []Image{img3, img2, img4, img1}
 	sortedImages := []Image{img1, img4, img2, img3}
 
-	SortByState(images)
+	SortByState(DefaultStateTag, images)
 
 	if !reflect.DeepEqual(sortedImages, images) {
 		t.Errorf("\n\twant: %+v\n\t got: %+v", sortedImages, images)

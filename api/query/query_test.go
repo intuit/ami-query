@@ -20,10 +20,8 @@ type mockCache struct {
 	filterErr error
 }
 
-func (mockCache) Regions() []string {
-	return []string{"us-west-2"}
-}
-
+func (mockCache) Regions() []string   { return []string{"us-west-2"} }
+func (m *mockCache) StateTag() string { return amicache.DefaultStateTag }
 func (m *mockCache) FilterImages(string, *amicache.Filter) ([]amicache.Image, error) {
 	images := []amicache.Image{
 		{
@@ -36,7 +34,7 @@ func (m *mockCache) FilterImages(string, *amicache.Filter) ([]amicache.Image, er
 				CreationDate:       aws.String("2017-11-29T16:00:00.000Z"),
 				ImageId:            aws.String("ami-1a2b3c4d"),
 				Tags: []*ec2.Tag{{
-					Key:   aws.String(amicache.StateTag),
+					Key:   aws.String(amicache.DefaultStateTag),
 					Value: aws.String("available"),
 				}},
 			},
@@ -56,7 +54,7 @@ func TestHandler(t *testing.T) {
 		{"callback", "/amis?callback=foo", http.StatusOK, nil},
 		{"pretty", "/amis?pretty", http.StatusOK, nil},
 		{"bad_key", "/amis?foo=bar", http.StatusBadRequest, nil},
-		{"bad_tag", "/amis?tag=foo:bar:baz", http.StatusBadRequest, nil},
+		{"bad_tag", "/amis?tag=foobar", http.StatusBadRequest, nil},
 		{"bad_region", "/amis?region=us-foo-1", http.StatusBadRequest, errors.New("foo")},
 	}
 

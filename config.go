@@ -27,6 +27,7 @@ type Config struct {
 	CorsAllowedOrigins         []string
 	SSLCert                    string
 	SSLKey                     string
+	StateTag                   string
 }
 
 // NewConfig returns a Config with settings pulled from the environment. See
@@ -38,6 +39,7 @@ func NewConfig() (*Config, error) {
 		CacheTTL:   15 * time.Minute,
 		RoleName:   os.Getenv("AMIQUERY_ROLE_NAME"),
 		TagFilter:  os.Getenv("AMIQUERY_TAG_FILTER"),
+		StateTag:   os.Getenv("AMIQUERY_STATE_TAG"),
 		AppLog:     os.Getenv("AMIQUERY_APP_LOGFILE"),
 		HTTPLog:    os.Getenv("AMIQUERY_HTTP_LOGFILE"),
 		SSLCert:    os.Getenv("SSL_CERTIFICATE_FILE"),

@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
-// StateTag is the tag key value on an ec2.Image that represents its state.
-const StateTag = "status"
+// DefaultStateTag is the default tag-key for determining AMI state.
+const DefaultStateTag = "state"
 
 // Life cycle state weights.
 const (
@@ -80,7 +80,7 @@ func (i *Image) Tags() map[string]string {
 // SortByState sorts by taking the CreationDate attribute, converting it to
 // UNIX epoch, and adds it to the weighted value of the status tag. It sorts
 // from newest to oldest AMIs.
-func SortByState(images []Image) {
+func SortByState(state string, images []Image) {
 	sort.Slice(images, func(i, j int) bool {
 		var dateFmt = "2006-01-02T15:04:05.000Z"
 		var icdate, istate uint64
@@ -96,11 +96,11 @@ func SortByState(images []Image) {
 		}
 
 		// Get the state tag
-		if state := images[i].Tag(StateTag); state != "" {
+		if state := images[i].Tag(state); state != "" {
 			istate = stateWeight[strings.ToLower(state)]
 		}
 
-		if state := images[j].Tag(StateTag); state != "" {
+		if state := images[j].Tag(state); state != "" {
 			jstate = stateWeight[strings.ToLower(state)]
 		}
 

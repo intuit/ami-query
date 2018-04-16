@@ -1,3 +1,16 @@
+## [2.2.0] - 2018-04-16
+
+### Changed
+
+* The `tag` query parameter now properly handles tag values with one or more
+  colons, e.g. `tag=key:value:of:tag` translates to `key=value:of:tag`.
+
+### Added
+
+* The tag representing an AMI's state is now configurable through the
+  `AMIQUERY_STATE_TAG` environment variable. If not provided, the default value
+  is `state`.
+
 ## [2.1.0] - 2018-03-23
 
 ### Added
