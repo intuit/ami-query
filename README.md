@@ -101,6 +101,12 @@ The configuration is handled through the following environment variables.
 
   A comma-separated list of allowed Origins.
 
+* **AMIQUERY_COLLECT_LAUNCH_PERMISSIONS**
+
+  If launch permission information should collected for each AMI. The default is
+  "true". If you do not want to collect the launch permission information, set
+  this to "false".
+
 * **SSL_CERTIFICATE_FILE**
 
   The file location of the SSL certificate file. **SSL_KEY_FILE** also needs to
@@ -181,8 +187,9 @@ using the following schema:
 convenience.
 
 `launch_permission` is used to return only the AMIs with the matching launch
-permission. If more than only value is provided, only the first value will be
-used.
+permission. If more than one value is provided, only the first value will be
+used. If `AMIQUERY_COLLECT_LAUNCH_PERMISSIONS` is "false", this API
+functionality will be ignored.
 
 You may also specify the `callback` query parameter to receive the output in
 JSONP. Additionally, you can specify the `pretty` query parameter to see the

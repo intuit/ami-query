@@ -28,6 +28,7 @@ type Config struct {
 	SSLCert                    string
 	SSLKey                     string
 	StateTag                   string
+	CollectLaunchPermissions   bool
 }
 
 // NewConfig returns a Config with settings pulled from the environment. See
@@ -35,15 +36,16 @@ type Config struct {
 func NewConfig() (*Config, error) {
 	var err error
 	var cfg = Config{
-		ListenAddr: ":8080",
-		CacheTTL:   15 * time.Minute,
-		RoleName:   os.Getenv("AMIQUERY_ROLE_NAME"),
-		TagFilter:  os.Getenv("AMIQUERY_TAG_FILTER"),
-		StateTag:   os.Getenv("AMIQUERY_STATE_TAG"),
-		AppLog:     os.Getenv("AMIQUERY_APP_LOGFILE"),
-		HTTPLog:    os.Getenv("AMIQUERY_HTTP_LOGFILE"),
-		SSLCert:    os.Getenv("SSL_CERTIFICATE_FILE"),
-		SSLKey:     os.Getenv("SSL_KEY_FILE"),
+		ListenAddr:               ":8080",
+		CacheTTL:                 15 * time.Minute,
+		RoleName:                 os.Getenv("AMIQUERY_ROLE_NAME"),
+		TagFilter:                os.Getenv("AMIQUERY_TAG_FILTER"),
+		StateTag:                 os.Getenv("AMIQUERY_STATE_TAG"),
+		AppLog:                   os.Getenv("AMIQUERY_APP_LOGFILE"),
+		HTTPLog:                  os.Getenv("AMIQUERY_HTTP_LOGFILE"),
+		CollectLaunchPermissions: true,
+		SSLCert:                  os.Getenv("SSL_CERTIFICATE_FILE"),
+		SSLKey:                   os.Getenv("SSL_KEY_FILE"),
 	}
 
 	// The address to listen on.
@@ -66,6 +68,14 @@ func NewConfig() (*Config, error) {
 	// AWS regions to scan for AMIs.
 	if regions := os.Getenv("AMIQUERY_REGIONS"); regions != "" {
 		cfg.Regions = strings.Split(regions, ",")
+	}
+
+	// If launch permissions should be collected for each AMI.
+	if collect := os.Getenv("AMIQUERY_COLLECT_LAUNCH_PERMISSIONS"); collect != "" {
+		if cfg.CollectLaunchPermissions, err = strconv.ParseBool(collect); err != nil {
+			return nil, fmt.Errorf("failed to read AMIQUERY_COLLECT_LAUNCH_PERMISSIONS: %v", err)
+		}
+
 	}
 
 	// Duration between cache updates.

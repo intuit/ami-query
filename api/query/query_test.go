@@ -17,11 +17,13 @@ import (
 )
 
 type mockCache struct {
-	filterErr error
+	filterErr          error
+	collectLaunchPerms bool
 }
 
-func (mockCache) Regions() []string   { return []string{"us-west-2"} }
-func (m *mockCache) StateTag() string { return amicache.DefaultStateTag }
+func (mockCache) Regions() []string                 { return []string{"us-west-2"} }
+func (m *mockCache) StateTag() string               { return amicache.DefaultStateTag }
+func (m *mockCache) CollectLaunchPermissions() bool { return m.collectLaunchPerms }
 func (m *mockCache) FilterImages(string, *amicache.Filter) ([]amicache.Image, error) {
 	images := []amicache.Image{
 		{

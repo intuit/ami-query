@@ -112,6 +112,7 @@ func main() {
 		amicache.TTL(cfg.CacheTTL),
 		amicache.MaxConcurrentRequests(cfg.CacheMaxConcurrentRequests),
 		amicache.MaxRequestRetries(cfg.CacheMaxRequestRetries),
+		amicache.CollectLaunchPermissions(cfg.CollectLaunchPermissions),
 		amicache.HTTPClient(httpClient),
 		amicache.Logger(logger),
 	)
