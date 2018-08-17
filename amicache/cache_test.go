@@ -179,6 +179,25 @@ func TestStateTagDefault(t *testing.T) {
 	}
 }
 
+func TestCollectLaunchPermissions(t *testing.T) {
+	tests := []struct {
+		name    string
+		collect bool
+		want    bool
+	}{
+		{"collect", true, true},
+		{"do_not_collect", false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := New(nil, "foo", []string{}, CollectLaunchPermissions(tt.collect))
+			if got := c.CollectLaunchPermissions(); tt.want != got {
+				t.Errorf("want: %T, got: %T", tt.want, got)
+			}
+		})
+	}
+}
+
 func TestCacheIsRunning(t *testing.T) {
 	c := newMockCache()
 	warmed := make(chan struct{})
@@ -238,31 +257,48 @@ func TestCacheContextCanceled(t *testing.T) {
 }
 
 func TestImages(t *testing.T) {
-	c := newMockCache(Regions("us-west-1"), TagFilter("foo"))
-	warmed := make(chan struct{})
-
-	go func() { c.Run(context.Background(), warmed) }()
-
-	defer c.Stop()
-	<-warmed
-
-	images, err := c.Images("us-west-1")
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name          string
+		collectLaunch bool
+		region        string
+		wantImgLen    int
+		wantPermsLen  int
+		wantErr       error
+	}{
+		{"no_errors_with_perms", true, "us-west-1", 1, 2, nil},
+		{"no_errors_without_perms", false, "us-west-1", 1, 0, nil},
+		{"invalid_region", false, "us-foo-1", 0, 2, errors.New("unknown or unsupported region: us-foo-1")},
 	}
 
-	if want, got := 1, len(images); want != got {
-		t.Errorf("want: %d image(s), got: %d image(s)", want, got)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := newMockCache(
+				Regions("us-west-1"),
+				TagFilter("foo"),
+				CollectLaunchPermissions(tt.collectLaunch),
+			)
+			warmed := make(chan struct{})
 
-	if want, got := 2, len(images[0].launchPerms); want != got {
-		t.Errorf("want: %d perms, got: %d perms", want, got)
-	}
+			go func() { c.Run(context.Background(), warmed) }()
 
-	_, err = c.Images("us-foo-1")
+			defer c.Stop()
+			<-warmed
 
-	if want, got := "unknown or unsupported region: us-foo-1", err.Error(); want != got {
-		t.Errorf("\n\twant err: %q\n\t got err: %q", want, got)
+			images, err := c.Images(tt.region)
+			if !reflect.DeepEqual(tt.wantErr, err) {
+				t.Errorf("want: %v err, got: %v err", tt.wantErr, err)
+			}
+
+			if tt.wantErr == nil {
+				if got := len(images); tt.wantImgLen != len(images) {
+					t.Errorf("want: %d image(s), got: %d image(s)", tt.wantImgLen, got)
+				}
+
+				if got := len(images[0].launchPerms); tt.wantPermsLen != got {
+					t.Errorf("want: %d perms, got: %d perms", tt.wantPermsLen, got)
+				}
+			}
+		})
 	}
 }
 

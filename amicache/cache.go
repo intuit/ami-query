@@ -109,6 +109,14 @@ func MaxRequestRetries(max int) Option {
 	})
 }
 
+// CollectLaunchPermissions determines if launch permissions should be
+// collected for each AMI.
+func CollectLaunchPermissions(collect bool) Option {
+	return optionFunc(func(c *Cache) {
+		c.collectLaunchPerms = collect
+	})
+}
+
 // HTTPClient sets the http.Client used for communicating with the AWS APIs.
 func HTTPClient(client *http.Client) Option {
 	return optionFunc(func(c *Cache) {
@@ -129,22 +137,23 @@ func Logger(logger log.Logger) Option {
 
 // Cache manages the images polled from AWS.
 type Cache struct {
-	svc         stsiface.STSAPI     // The AWS STS service API client
-	roleName    string              // The role assumed in targeted accounts
-	ownerIDs    []string            // Owner IDs used to filter AMI results
-	cache       map[string]Image    // The cache of AMIs
-	regionIndex map[string][]string // Image IDs index by region
-	mu          sync.RWMutex        // guards cache and regionIndex
-	regions     map[string]struct{} // The list of regions polled for AMIs
-	tagFilter   string              // The name of a tag used to filter ec2:DescribeImages
-	stateTag    string              // The name of a tag used to determine the state of an AMI
-	ttl         time.Duration       // Duration between updates to the cache (default: 15m)
-	maxRequests int                 // Max number of goroutines used for DescribeImageAttributes API requests.
-	maxRetries  int                 // Max number of retries for DescribeImageAttributes API requests.
-	httpClient  *http.Client        // HTTP client used to communicate with AWS
-	logger      log.Logger          // go-kit logger
-	quitCh      chan chan struct{}  // Used to signal stopping the cache
-	running     int32               // accessed atomically (non-zero means it's running)
+	svc                stsiface.STSAPI     // The AWS STS service API client
+	roleName           string              // The role assumed in targeted accounts
+	ownerIDs           []string            // Owner IDs used to filter AMI results
+	cache              map[string]Image    // The cache of AMIs
+	regionIndex        map[string][]string // Image IDs index by region
+	mu                 sync.RWMutex        // guards cache and regionIndex
+	regions            map[string]struct{} // The list of regions polled for AMIs
+	tagFilter          string              // The name of a tag used to filter ec2:DescribeImages
+	stateTag           string              // The name of a tag used to determine the state of an AMI
+	ttl                time.Duration       // Duration between updates to the cache (default: 15m)
+	maxRequests        int                 // Max number of goroutines used for DescribeImageAttributes API requests.
+	maxRetries         int                 // Max number of retries for DescribeImageAttributes API requests.
+	collectLaunchPerms bool                // If launch permissions should be collected for the AMIs
+	httpClient         *http.Client        // HTTP client used to communicate with AWS
+	logger             log.Logger          // go-kit logger
+	quitCh             chan chan struct{}  // Used to signal stopping the cache
+	running            int32               // accessed atomically (non-zero means it's running)
 
 	// Used to mock out creating an ec2 service for testing.
 	ec2Svc func(*session.Session, string, int) ec2iface.EC2API
@@ -264,6 +273,12 @@ func (c *Cache) StateTag() string {
 	return c.stateTag
 }
 
+// CollectLaunchPermissions returns whether the cache is storing launch
+// permission data for each AMI.
+func (c *Cache) CollectLaunchPermissions() bool {
+	return c.collectLaunchPerms
+}
+
 // setOptions configures a Manager.
 func (c *Cache) setOptions(options []Option) {
 	for _, opt := range options {
@@ -307,7 +322,7 @@ func (c *Cache) updateCache(ctx context.Context) {
 					logger := log.With(logger, "region", region)
 
 					svc := c.ec2Svc(sess, region, c.maxRetries)
-					images, index := getImagesFromOwner(svc, logger, owner, region, c.tagFilter, c.maxRequests)
+					images, index := getImagesFromOwner(svc, logger, owner, region, c.tagFilter, c.maxRequests, c.collectLaunchPerms)
 
 					mu.Lock()
 					newIndex[region] = append(newIndex[region], index...)
@@ -388,7 +403,7 @@ func (c *Cache) assumeRole(account string) (*session.Session, error) {
 // getImagesFromOwner gets the images and assoicated launch permissions from the
 // provided owner. In accounts with a large number of AMIs (~150 or more), this
 // may hit RequestLimitExeeded and trigger retries.
-func getImagesFromOwner(svc ec2iface.EC2API, logger log.Logger, owner, region, tagFilter string, maxReq int) ([]Image, []string) {
+func getImagesFromOwner(svc ec2iface.EC2API, logger log.Logger, owner, region, tagFilter string, maxReq int, collectLaunch bool) ([]Image, []string) {
 	input := &ec2.DescribeImagesInput{
 		Owners: []*string{aws.String(owner)},
 	}
@@ -407,8 +422,23 @@ func getImagesFromOwner(svc ec2iface.EC2API, logger log.Logger, owner, region, t
 	}
 
 	var (
-		index    = []string{}
-		images   = []Image{}
+		index  = []string{}
+		images = []Image{}
+	)
+
+	if !collectLaunch {
+		for _, image := range rsp.Images {
+			index = append(index, *image.ImageId)
+			images = append(images, Image{
+				Image:   image,
+				OwnerID: owner,
+				Region:  region,
+			})
+		}
+		return images, index
+	}
+
+	var (
 		mu       = sync.Mutex{}
 		wg       = sync.WaitGroup{}
 		workerCh = make(chan *ec2.Image)

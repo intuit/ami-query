@@ -1,3 +1,11 @@
+## [2.3.0] - 2018-08-15
+
+### Added
+
+* Added a config item to disable collecting launch permission information
+  (AMIQUERY_COLLECT_LAUNCH_PERMISSIONS).
+
+
 ## [2.2.0] - 2018-04-16
 
 ### Changed

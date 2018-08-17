@@ -100,12 +100,18 @@ func (a *API) EncodeTo(w http.ResponseWriter, p *Params, images []amicache.Image
 // Get the images from the cache based on the query.
 func (a *API) getImages(p *Params) ([]amicache.Image, error) {
 	images := []amicache.Image{}
-	filter := amicache.NewFilter(
+	filters := []amicache.Filterer{
 		amicache.FilterByImageID(p.images...),
 		amicache.FilterByOwnerID(p.ownerID),
-		amicache.FilterByLaunchPermission(p.launchPerm),
 		amicache.FilterByTags(p.tags),
-	)
+	}
+
+	if a.cache.CollectLaunchPermissions() {
+		filters = append(filters, amicache.FilterByLaunchPermission(p.launchPerm))
+	}
+
+	filter := amicache.NewFilter(filters...)
+
 	for _, region := range p.regions {
 		matched, err := a.cache.FilterImages(region, filter)
 		if err != nil {
@@ -137,4 +143,5 @@ type cacher interface {
 	FilterImages(string, *amicache.Filter) ([]amicache.Image, error)
 	Regions() []string
 	StateTag() string
+	CollectLaunchPermissions() bool
 }

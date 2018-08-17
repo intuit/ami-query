@@ -27,10 +27,11 @@ func TestConfig(t *testing.T) {
 				"AMIQUERY_OWNER_IDS": "123456789012,123456789013",
 			},
 			want: &Config{
-				ListenAddr: ":8080",
-				RoleName:   "foo",
-				OwnerIDs:   []string{"123456789012", "123456789013"},
-				CacheTTL:   15 * time.Minute,
+				ListenAddr:               ":8080",
+				RoleName:                 "foo",
+				OwnerIDs:                 []string{"123456789012", "123456789013"},
+				CacheTTL:                 15 * time.Minute,
+				CollectLaunchPermissions: true,
 			},
 			err: nil,
 		},
@@ -50,6 +51,7 @@ func TestConfig(t *testing.T) {
 				"AMIQUERY_APP_LOGFILE":                   "/tmp/app.log",
 				"AMIQUERY_HTTP_LOGFILE":                  "/tmp/http.log",
 				"AMIQUERY_CORS_ALLOWED_ORIGINS":          "foo.com, bar.com , baz.com",
+				"AMIQUERY_COLLECT_LAUNCH_PERMISSIONS":    "false",
 				"SSL_CERTIFICATE_FILE":                   "/tmp/test.crt",
 				"SSL_KEY_FILE":                           "/tmp/test.key",
 			},
@@ -66,6 +68,7 @@ func TestConfig(t *testing.T) {
 				AppLog:                     "/tmp/app.log",
 				HTTPLog:                    "/tmp/http.log",
 				CorsAllowedOrigins:         []string{"foo.com", "bar.com", "baz.com"},
+				CollectLaunchPermissions:   false,
 				SSLCert:                    "/tmp/test.crt",
 				SSLKey:                     "/tmp/test.key",
 			},
@@ -114,6 +117,16 @@ func TestConfig(t *testing.T) {
 			},
 			want: nil,
 			err:  errors.New(`failed to read AMIQUERY_CACHE_MAX_REQUEST_RETRIES: strconv.Atoi: parsing "1foo": invalid syntax`),
+		},
+		{
+			name: "bad_collect_launch_permissions_value",
+			vars: map[string]string{
+				"AMIQUERY_ROLE_NAME":                  "foo",
+				"AMIQUERY_OWNER_IDS":                  "123456789012,123456789013",
+				"AMIQUERY_COLLECT_LAUNCH_PERMISSIONS": "foo",
+			},
+			want: nil,
+			err:  errors.New(`failed to read AMIQUERY_COLLECT_LAUNCH_PERMISSIONS: strconv.ParseBool: parsing "foo": invalid syntax`),
 		},
 	}
 	for _, tt := range tests {
