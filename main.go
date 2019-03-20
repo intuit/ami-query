@@ -117,8 +117,12 @@ func main() {
 		amicache.Logger(logger),
 	)
 
-	// Create the query endpoint and use Apache Combined log format.
-	api := handlers.CombinedLoggingHandler(httpLogger, query.NewAPI(cache))
+	// Create the query endpoint and use Apache Combined log format and
+	// compression.
+	api := handlers.CombinedLoggingHandler(
+		httpLogger,
+		handlers.CompressHandler(query.NewAPI(cache)),
+	)
 
 	// Optionally add CORS support for allowed Origins.
 	if len(cfg.CorsAllowedOrigins) > 0 {
