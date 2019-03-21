@@ -1,3 +1,9 @@
+## [2.4.0] - 2019-03-20
+
+### Added
+
+* Added compression support to API responses.
+
 ## [2.3.0] - 2018-08-15
 
 ### Added
