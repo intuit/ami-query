@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
 	"testing"
 )
@@ -50,7 +51,7 @@ func TestSetLoggerStderr(t *testing.T) {
 }
 
 func TestSetLoggerFile(t *testing.T) {
-	file := os.TempDir() + "ami-query-test.txt"
+	file := path.Join(os.TempDir(), "ami-query-test.txt")
 	if _, err := setLogger(file); err != nil {
 		t.Fatal(err)
 	}
