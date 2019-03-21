@@ -10,7 +10,7 @@ GO_VERSION_CHECK := \
 BIN := ./bin/ami-query
 
 .PHONY: all
-all: check-go $(BIN)
+all: check-go test clean $(BIN)
 
 $(BIN):
 	go build $(BUILDARGS) -o $@
@@ -31,8 +31,8 @@ test: check-go
 
 .PHONY: vet
 vet: check-go
-	@echo "go tool vet $(VETARGS)"
-	@go list ./... | xargs go list -f '{{.Dir}}' | xargs go tool vet $(VETARGS)
+	@echo "go vet $(VETARGS)"
+	go vet $(VETARGS) ./...
 
 .PHONY: cover
 cover: check-go
