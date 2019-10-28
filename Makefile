@@ -1,51 +1,17 @@
-GO_MIN_VERSION := 11000 # go1.10
-GO_VERSION_CHECK := \
-  $(shell expr \
-    $(shell go version | \
-      awk '{print $$3}' | \
-      cut -do -f2 | \
-      sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/' \
-    ) \>= $(GO_MIN_VERSION) \
-  )
+export GOFLAGS=-mod=vendor
+
 BIN := ./bin/ami-query
 
-.PHONY: all
-all: check-go test clean $(BIN)
+# Default Go linker flags.
+GO_LDFLAGS ?= -ldflags="-s -w"
 
-$(BIN):
-	go build $(BUILDARGS) -o $@
+.PHONY: all
+all: test clean
+	GOOS=linux GOARCH=amd64 go build $(GO_LDFLAGS) $(BUILDARGS) -o $(BIN)
 
 .PHONY: race
 race:
 	@$(MAKE) all BUILDARGS=-race
-
-.PHONY: dep
-dep: check-go
-	dep ensure
-
-.PHONY: test
-test: check-go
-	go test $(TESTARGS) -timeout=30s ./...
-	@$(MAKE) vet
-	@$(MAKE) lint
-
-.PHONY: vet
-vet: check-go
-	@echo "go vet $(VETARGS)"
-	go vet $(VETARGS) ./...
-
-.PHONY: cover
-cover: check-go
-	@go test -coverprofile=coverage.out ./...
-	@go tool cover -html=coverage.out
-	@rm -f coverage.out
-
-.PHONY: lint
-lint: check-go
-	@echo "golint $(LINTARGS)"
-	@for pkg in $(shell go list ./...) ; do \
-		golint $(LINTARGS) $$pkg ; \
-	done
 
 .PHONY: rpm
 rpm: clean all
@@ -56,8 +22,29 @@ clean:
 	@rm -rf ./bin *.rpm
 	@$(MAKE) -C resources clean
 
-.PHONY: check-go
-check-go:
-ifeq ($(GO_VERSION_CHECK),0)
-	$(error go1.9 or higher is required)
-endif
+.PHONY: vendor
+vendor:
+	go mod tidy
+	go mod vendor
+
+.PHONY: test
+test:
+	go test -race -timeout=30s $(TESTARGS) ./...
+	@$(MAKE) vet
+
+.PHONY: vet
+vet:
+	go vet $(VETARGS) ./...
+
+.PHONY: lint
+lint:
+	@echo "golint $(LINTARGS)"
+	@for pkg in $(shell go list ./...) ; do \
+		golint $(LINTARGS) $$pkg ; \
+	done
+
+.PHONY: cover
+cover:
+	@$(MAKE) test TESTARGS="-tags test -coverprofile=coverage.out"
+	@go tool cover -html=coverage.out
+	@rm -f coverage.out

@@ -41,15 +41,8 @@ install -m 0755 ami-query $RPM_BUILD_ROOT/usr/bin/ami-query
 install -m 0755 -d $RPM_BUILD_ROOT/etc/sysconfig/
 install -m 0640 settings $RPM_BUILD_ROOT/etc/sysconfig/ami-query
 
-%if 0%{?el6}
-install -m 0755 -d $RPM_BUILD_ROOT/etc/rc.d/init.d/
-install -m 0755 rc.ami-query $RPM_BUILD_ROOT/etc/rc.d/init.d/ami-query
-%endif
-
-%if 0%{?el7}
 install -m 0755 -d $RPM_BUILD_ROOT/usr/lib/systemd/system/
 install -m 0644 ami-query.service $RPM_BUILD_ROOT/usr/lib/systemd/system/ami-query.service
-%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -60,13 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/ami-query
 %config(noreplace) %attr(0640,root,ami-query) /etc/sysconfig/ami-query
 
-%if 0%{?el6}
-/etc/rc.d/init.d/ami-query
-%endif
-
-%if 0%{?el7}
 /usr/lib/systemd/system/ami-query.service
-%endif
 
 %changelog
 * Thu Sep 24 2015 James Massara <james_massara@intuit.com>

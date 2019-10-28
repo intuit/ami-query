@@ -22,7 +22,7 @@ $ go get github.com/intuit/ami-query
 into another directory (e.g. `/usr/local/bin`), then you can export `GOBIN`
 prior to running `go get`.
 
-To build an RPM for either RHEL 6 or 7, which can be used for installation on
+To build an RPM for RHEL 7, which can be used for installation on
 other systems, `cd` into the source directory and run `make rpm`.
 
 ```shell
