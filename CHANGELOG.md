@@ -1,3 +1,15 @@
+## [2.5.0] - 2019-10-28
+
+### Changed
+
+* Updated to golang `1.13.3`.
+* Update aws-sdk-go to `v1.25.14`.
+
+### Removed
+
+* Using dep for dependencies (in favor of modules).
+* RHEL 6 rpm support.
+
 ## [2.4.0] - 2019-03-20
 
 ### Added

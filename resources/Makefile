@@ -11,7 +11,7 @@ RPMBUILD_ARGS := \
 all: clean
 	@mkdir -p $(RPM_TOPDIR)/{BUILD,RPMS,SRPMS}
 	@mkdir -p $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION)
-	@cp -p ./rhel/{settings,rc.ami-query,ami-query.service} $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION)/
+	@cp -p ./rhel/{settings,ami-query.service} $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION)/
 	@cp -p ../{bin/ami-query,README.md} $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION)/
 	@tar czf $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz -C $(RPM_TOPDIR)/SOURCES --exclude ".git" $(NAME)-$(VERSION)
 	@rpmbuild $(RPMBUILD_ARGS) -ba --clean ./rhel/$(NAME).spec
