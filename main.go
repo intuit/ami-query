@@ -137,7 +137,7 @@ func main() {
 		HeadersRegexp("Accept", `(application/vnd\.ami-query-v1\+json|\*/\*)`).
 		Methods("GET")
 
-	// light weight health route
+	// lite weight health route
 	router.HandleFunc(health.AppHealthPath, health.AppHealthCheck).Methods("GET")
 
 	// Create a group and context for running the services.
