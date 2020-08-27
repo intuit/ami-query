@@ -31,7 +31,7 @@ vendor:
 test:
 	go test -race -timeout=30s $(TESTARGS) ./...
 	@$(MAKE) vet
-	@$(MAKE) lint
+	@if [ -z "${GITHUB_ACTIONS}" ]; then $(MAKE) lint; fi
 
 .PHONY: vet
 vet:
