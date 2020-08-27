@@ -1,15 +1,19 @@
-name: Go
+name: build-test
 
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+      - '**.md'
   pull_request:
     branches: [ master ]
+    paths-ignore:
+      - '**.md'
 
 jobs:
 
   build:
-    name: test
+    name: Run
     runs-on: ubuntu-latest
     steps:
 
