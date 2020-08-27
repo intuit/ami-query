@@ -1,6 +1,6 @@
 # ami-query
 
-![Build Status](https://github.com/intuit/ami-query/workflows/workflows/build-test/badge.svg)
+![Build Status](https://github.com/intuit/ami-query/workflows/build-test/badge.svg)
 
 Provide a RESTful API to query information about Amazon AWS AMIs.
 
