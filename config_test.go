@@ -96,7 +96,7 @@ func TestConfig(t *testing.T) {
 				"AMIQUERY_CACHE_TTL": "foo",
 			},
 			want: nil,
-			err:  errors.New("failed to read AMIQUERY_CACHE_TTL: time: invalid duration \"foo\""),
+			err:  errors.New("failed to read AMIQUERY_CACHE_TTL: time: invalid duration foo"),
 		},
 		{
 			name: "bad_cache_max_requests_value",

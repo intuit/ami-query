@@ -73,7 +73,7 @@ func NewConfig() (*Config, error) {
 	// If launch permissions should be collected for each AMI.
 	if collect := os.Getenv("AMIQUERY_COLLECT_LAUNCH_PERMISSIONS"); collect != "" {
 		if cfg.CollectLaunchPermissions, err = strconv.ParseBool(collect); err != nil {
-			return nil, fmt.Errorf("failed to read AMIQUERY_COLLECT_LAUNCH_PERMISSIONS: %v", err)
+			return nil, fmt.Errorf("failed to read AMIQUERY_COLLECT_LAUNCH_PERMISSIONS: %w", err)
 		}
 
 	}
@@ -81,21 +81,21 @@ func NewConfig() (*Config, error) {
 	// Duration between cache updates.
 	if ttl := os.Getenv("AMIQUERY_CACHE_TTL"); ttl != "" {
 		if cfg.CacheTTL, err = time.ParseDuration(ttl); err != nil {
-			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_TTL: %v", err)
+			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_TTL: %w", err)
 		}
 	}
 
 	// Maximum number of goroutines used for updating the cache.
 	if maxRequests := os.Getenv("AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS"); maxRequests != "" {
 		if cfg.CacheMaxConcurrentRequests, err = strconv.Atoi(maxRequests); err != nil {
-			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS: %v", err)
+			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_MAX_CONCURRENT_REQUESTS: %w", err)
 		}
 	}
 
 	// Maximum number of API request retries before giving up.
 	if maxRetries := os.Getenv("AMIQUERY_CACHE_MAX_REQUEST_RETRIES"); maxRetries != "" {
 		if cfg.CacheMaxRequestRetries, err = strconv.Atoi(maxRetries); err != nil {
-			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_MAX_REQUEST_RETRIES: %v", err)
+			return nil, fmt.Errorf("failed to read AMIQUERY_CACHE_MAX_REQUEST_RETRIES: %w", err)
 		}
 	}
 
