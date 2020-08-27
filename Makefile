@@ -31,6 +31,7 @@ vendor:
 test:
 	go test -race -timeout=30s $(TESTARGS) ./...
 	@$(MAKE) vet
+	@$(MAKE) lint
 
 .PHONY: vet
 vet:
