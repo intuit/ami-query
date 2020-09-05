@@ -1,6 +1,6 @@
 # ami-query
 
-[![Build Status](https://travis-ci.org/intuit/ami-query.svg?branch=master)](https://travis-ci.org/intuit/ami-query)
+![Build Status](https://github.com/intuit/ami-query/workflows/build-test/badge.svg)
 
 Provide a RESTful API to query information about Amazon AWS AMIs.
 
