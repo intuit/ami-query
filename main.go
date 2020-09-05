@@ -8,6 +8,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/intuit/ami-query/api/health"
 	"io"
 	stdlog "log"
 	"net"
@@ -17,9 +18,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/intuit/ami-query/amicache"
-	"github.com/intuit/ami-query/api/query"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -27,6 +25,8 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/intuit/ami-query/amicache"
+	"github.com/intuit/ami-query/api/query"
 	"github.com/oklog/oklog/pkg/group"
 )
 
@@ -136,6 +136,9 @@ func main() {
 	router.Handle(query.APIPathQuery, api).
 		HeadersRegexp("Accept", `(application/vnd\.ami-query-v1\+json|\*/\*)`).
 		Methods("GET")
+
+	// lite weight health route
+	router.HandleFunc(health.AppHealthPath, health.AppHealthCheck).Methods("GET")
 
 	// Create a group and context for running the services.
 	g := group.Group{}
